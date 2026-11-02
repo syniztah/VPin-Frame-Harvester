@@ -1,0 +1,147 @@
+{
+  "_comment": "Theatre of Magic (tom_13). Switch numbers from PinMAME's sim (src/wpc/sims/wpc/full/tom.c). Optos (trough 31-36, cube 55-58) are inverted by PinMAME itself, so 1 = ball present. Trough coil = 1. Manual plunger (no launch button). 2 coins per credit by default.",
+  "name": "Theatre of Magic",
+  "roms": [
+    "tom_13",
+    "tom_14h"
+  ],
+  "levels": 0,
+  "pulse_ms": 60,
+  "always_closed": [
+    22,
+    24
+  ],
+  "coin": 1,
+  "coins_per_credit": 2,
+  "start": 13,
+  "trough": [
+    32,
+    33,
+    34,
+    35
+  ],
+  "trough_solenoid": 1,
+  "shooter_lane": 15,
+  "launch_button": null,
+  "flippers": [
+    112,
+    114
+  ],
+  "drain": [],
+  "playfield": [
+    25,
+    26,
+    27,
+    28,
+    37,
+    38,
+    41,
+    42,
+    43,
+    44,
+    45,
+    47,
+    48,
+    51,
+    52,
+    53,
+    54,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    71,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87
+  ],
+  "ball_time_s": [
+    20,
+    90
+  ],
+  "masks": [],
+  "boot_s": 12,
+  "serve_timeout_s": 30,
+  "rules": [
+    {
+      "name": "score screen",
+      "_comment": "The words BALL and CREDITS at the bottom, exactly as on every score screen. When both are there, the scores (top 26 rows) and the ball/credit numbers are ignored. layout_cell keeps one example per rough layout (1 player, 2 players with P1 up, P2 up...).",
+      "trigger": [
+        {
+          "x": 18,
+          "y": 26,
+          "rows": [
+            "00000000000000000000",
+            "03330003300300030000",
+            "03003030030300030000",
+            "03330033330300030000",
+            "03003030030300030000",
+            "03330030030333033300"
+          ]
+        },
+        {
+          "x": 68,
+          "y": 26,
+          "rows": [
+            "00000000000000000000000000000000000",
+            "00333033300333303330033303330033300",
+            "03000030030300003003003000300300000",
+            "03000033300333003003003000300033000",
+            "03000030030300003003003000300000300",
+            "00333030030333303330033300300333000"
+          ]
+        }
+      ],
+      "masks": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 128,
+          "h": 26,
+          "name": "scores"
+        },
+        {
+          "x": 38,
+          "y": 26,
+          "w": 14,
+          "h": 6,
+          "name": "ball number"
+        },
+        {
+          "x": 103,
+          "y": 26,
+          "w": 18,
+          "h": 6,
+          "name": "credit count"
+        }
+      ],
+      "layout_cell": [
+        32,
+        13
+      ]
+    }
+  ],
+  "single_player_chance": 0.7,
+  "service_buttons": [
+    5,
+    6,
+    7,
+    8
+  ],
+  "tilt": 14,
+  "slam_tilt": 21,
+  "nvram_map": "nvram_maps/tom_13.map.json"
+}

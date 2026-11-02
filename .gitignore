@@ -1,0 +1,18 @@
+# your own runs and settings
+out/
+app_settings.json
+_live.bin
+_stop
+games/*.script.vbs
+
+# never commit ROMs or the PinMAME library
+*.zip
+*.dll
+*.nv
+
+# python / build leftovers
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec

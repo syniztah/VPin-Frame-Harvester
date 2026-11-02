@@ -1,0 +1,210 @@
+{
+  "_comment": "Fish Tales (WPC), from the VPW 1.1.1 table script: made by harvester/scriptgen.py, then the reel added by hand. Physical trough 16-18 (coil 10 releases), outhole 15 (coil 9 kicks into the trough), catapult 36 (coil 2), VUK 47 (coil 3), Fish Finder 63 (coil 11), drop target 48 (coil 12 up), launch button 31, coin door 22/24 closed. Reel: motor coil 28, position switches 37/38 from the script's RotateReel table, 0.2 degrees per ms = 10 degrees per 50 ms, starts at 330 degrees.",
+  "name": "Fish Tales",
+  "roms": [
+    "ft_l5",
+    "ft_l3",
+    "ft_l4",
+    "ft_p4"
+  ],
+  "trough": [
+    16,
+    17,
+    18
+  ],
+  "trough_solenoid": 10,
+  "outhole": {
+    "switch": 15,
+    "coil": 9
+  },
+  "holes": [
+    {
+      "switch": 36,
+      "coil": 2
+    },
+    {
+      "switch": 47,
+      "coil": 3
+    },
+    {
+      "switch": 63,
+      "coil": 11
+    }
+  ],
+  "drop_banks": [
+    {
+      "switches": [
+        48
+      ],
+      "reset_coil": 12
+    }
+  ],
+  "coin": 1,
+  "start": 13,
+  "tilt": 14,
+  "slam_tilt": 21,
+  "flippers": [
+    112,
+    114
+  ],
+  "service_buttons": [
+    5,
+    6,
+    7,
+    8
+  ],
+  "coins_per_credit": 2,
+  "launch_button": 31,
+  "shooter_lane": 56,
+  "playfield": [
+    25,
+    26,
+    27,
+    28,
+    32,
+    33,
+    34,
+    35,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    51,
+    52,
+    53,
+    54,
+    55,
+    57,
+    58,
+    61,
+    62,
+    64,
+    65,
+    66
+  ],
+  "spinners": [
+    34
+  ],
+  "outlanes": [
+    25,
+    66
+  ],
+  "always_closed": [
+    22,
+    24
+  ],
+  "nvram_map": "nvram_maps/all/williams/wpc/ft_l5.map.json",
+  "levels": 0,
+  "pulse_ms": 60,
+  "ball_time_s": [
+    20,
+    90
+  ],
+  "single_player_chance": 0.7,
+  "drain": [],
+  "boot_s": 12,
+  "serve_timeout_s": 30,
+  "wheels": [
+    {
+      "motor": 28,
+      "step_ms": 50,
+      "start": 33,
+      "positions": [
+        [
+          37,
+          38
+        ],
+        [
+          37,
+          38
+        ],
+        [
+          37
+        ],
+        [
+          37,
+          38
+        ],
+        [
+          37,
+          38
+        ],
+        [],
+        [
+          37
+        ],
+        [
+          37
+        ],
+        [],
+        [
+          38
+        ],
+        [
+          38
+        ],
+        [],
+        [
+          37
+        ],
+        [
+          37
+        ],
+        [],
+        [
+          38
+        ],
+        [
+          38
+        ],
+        [],
+        [
+          37
+        ],
+        [
+          37
+        ],
+        [],
+        [
+          38
+        ],
+        [
+          38
+        ],
+        [],
+        [
+          37
+        ],
+        [
+          37
+        ],
+        [],
+        [
+          38
+        ],
+        [
+          38
+        ],
+        [],
+        [
+          37
+        ],
+        [
+          37
+        ],
+        [],
+        [
+          38
+        ],
+        [
+          38
+        ],
+        [
+          38
+        ]
+      ]
+    }
+  ]
+}

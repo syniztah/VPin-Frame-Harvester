@@ -1,0 +1,92 @@
+{
+  "_comment": "Made automatically from the table script (Pistol Poker (Alvin G. and Company 1993)_V1.3) by harvester/scriptgen.py. Check the report; edit freely.",
+  "_generated": true,
+  "name": "Pistol Poker (Alvin G. and Company 1993)_V1.3",
+  "roms": [
+    "pstlpkr1"
+  ],
+  "trough": [
+    18
+  ],
+  "trough_solenoid": 30,
+  "outhole": {
+    "switch": 17,
+    "coil": 13
+  },
+  "holes": [
+    {
+      "switch": 51,
+      "coil": 25
+    }
+  ],
+  "coin": 1,
+  "start": 9,
+  "tilt": 10,
+  "slam_tilt": 5,
+  "flippers": [
+    114,
+    116
+  ],
+  "service_buttons": [
+    -7,
+    -6
+  ],
+  "cabinet_pulse_ms": 400,
+  "coins_per_credit": 2,
+  "shooter_lane": 21,
+  "playfield": [
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    49,
+    50,
+    52,
+    53,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    65,
+    66,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80
+  ],
+  "levels": 0,
+  "pulse_ms": 60,
+  "ball_time_s": [
+    20,
+    90
+  ],
+  "single_player_chance": 0.7,
+  "drain": [],
+  "boot_s": 12,
+  "serve_timeout_s": 30
+}

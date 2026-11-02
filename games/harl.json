@@ -1,0 +1,105 @@
+{
+  "_comment": "Harley-Davidson (harl_a30), Stern Whitestar. From the user's VPX script plus Sega.vbs: Start 54, Coin 5, flippers 82/84. Trough 14->11 (4 balls) on coil 1. Shooter saucer 16 launched by coil 2, launch button 53. Drop banks 17-20 (reset coil 6) and 21-24 (reset coil 7). Cycle lock 41-44 (coil 5), scoop 46 (coil 4), super VUK 45 (coil 3). Switch 8 is an extra cabinet button.",
+  "name": "Harley-Davidson",
+  "roms": [
+    "harl_a30",
+    "harl_a40",
+    "harl_a13",
+    "harl_a18"
+  ],
+  "levels": 0,
+  "pulse_ms": 60,
+  "always_closed": [],
+  "coin": 5,
+  "coins_per_credit": 2,
+  "start": 54,
+  "trough": [
+    14,
+    13,
+    12,
+    11
+  ],
+  "trough_solenoid": 1,
+  "shooter_lane": 16,
+  "launch_button": 53,
+  "flippers": [
+    82,
+    84
+  ],
+  "buttons": [
+    8
+  ],
+  "drain": [],
+  "playfield": [
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    48,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62
+  ],
+  "drop_banks": [
+    {
+      "switches": [
+        17,
+        18,
+        19,
+        20
+      ],
+      "reset_coil": 6
+    },
+    {
+      "switches": [
+        21,
+        22,
+        23,
+        24
+      ],
+      "reset_coil": 7
+    }
+  ],
+  "ball_time_s": [
+    20,
+    90
+  ],
+  "masks": [],
+  "rules": [],
+  "boot_s": 12,
+  "serve_timeout_s": 30,
+  "single_player_chance": 0.7,
+  "service_buttons": [
+    0,
+    -1,
+    -2
+  ],
+  "tilt": 56,
+  "slam_tilt": 55,
+  "nvram_map": "nvram_maps/harl_a40.map.json",
+  "holes": [
+    {
+      "switch": 45,
+      "coil": 3
+    },
+    {
+      "switch": 46,
+      "coil": 4
+    }
+  ]
+}

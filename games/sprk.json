@@ -1,0 +1,89 @@
+{
+  "_comment": "South Park (sprk_103), Sega/Stern Whitestar. Switches from the user's VPX table script plus Sega.vbs: Start 54, Coin 5, flippers 82/84. Trough 14->10 (5 balls, 14 at the exit), released by coil 1. Shooter lane 16, auto-launch coil 2. Kickers: toilet 43, Kenny 44, super VUK 45, top VUK 46, Cartman 48.",
+  "name": "South Park",
+  "roms": [
+    "sprk_103",
+    "sprk_090"
+  ],
+  "levels": 0,
+  "pulse_ms": 60,
+  "always_closed": [],
+  "coin": 5,
+  "coins_per_credit": 2,
+  "start": 54,
+  "trough": [
+    14,
+    13,
+    12,
+    11,
+    10
+  ],
+  "trough_solenoid": 1,
+  "shooter_lane": 16,
+  "launch_button": null,
+  "flippers": [
+    82,
+    84
+  ],
+  "drain": [],
+  "playfield": [
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    34,
+    35,
+    36,
+    37,
+    38,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62
+  ],
+  "ball_time_s": [
+    20,
+    90
+  ],
+  "masks": [],
+  "rules": [],
+  "boot_s": 12,
+  "serve_timeout_s": 30,
+  "single_player_chance": 0.7,
+  "service_buttons": [
+    0,
+    -1,
+    -2
+  ],
+  "tilt": 56,
+  "slam_tilt": 55,
+  "nvram_map": "nvram_maps/sprk_103.map.json",
+  "holes": [
+    {
+      "switch": 45,
+      "coil": 3
+    },
+    {
+      "switch": 46,
+      "coil": 4
+    }
+  ]
+}

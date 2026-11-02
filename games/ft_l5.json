@@ -1,0 +1,94 @@
+{
+  "_comment": "Made automatically from the table script (Fish Tales (Williams 1992) VPW 1.1.1) by harvester/scriptgen.py. Check the report; edit freely.",
+  "_generated": true,
+  "name": "Fish Tales (Williams 1992) VPW 1.1.1",
+  "roms": [
+    "ft_l5"
+  ],
+  "holes": [
+    {
+      "switch": 47,
+      "coil": 3
+    },
+    {
+      "switch": 63,
+      "coil": 11
+    }
+  ],
+  "drop_banks": [
+    {
+      "switches": [
+        48
+      ],
+      "reset_coil": 12
+    }
+  ],
+  "coin": 1,
+  "start": 13,
+  "tilt": 14,
+  "slam_tilt": 21,
+  "flippers": [
+    112,
+    114
+  ],
+  "service_buttons": [
+    5,
+    6,
+    7,
+    8
+  ],
+  "coins_per_credit": 2,
+  "launch_button": 31,
+  "shooter_lane": 56,
+  "playfield": [
+    15,
+    16,
+    17,
+    18,
+    25,
+    26,
+    27,
+    28,
+    32,
+    33,
+    34,
+    35,
+    36,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    51,
+    52,
+    53,
+    54,
+    55,
+    57,
+    58,
+    61,
+    62,
+    64,
+    65,
+    66
+  ],
+  "spinners": [
+    34
+  ],
+  "outlanes": [
+    25,
+    66
+  ],
+  "nvram_map": "nvram_maps/all/williams/wpc/ft_l5.map.json",
+  "levels": 0,
+  "pulse_ms": 60,
+  "ball_time_s": [
+    20,
+    90
+  ],
+  "single_player_chance": 0.7,
+  "drain": [],
+  "boot_s": 12,
+  "serve_timeout_s": 30
+}

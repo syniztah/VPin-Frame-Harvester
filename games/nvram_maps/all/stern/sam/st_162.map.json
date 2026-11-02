@@ -1,0 +1,323 @@
+{
+  "_notes": [
+    "Compiled by Tom Collins, based on st_162h by HorsePin"
+  ],
+  "_fileformat": 0.9,
+  "_metadata": {
+    "version": 8,
+    "copyright": [
+      "Copyright (C)2024 by Tom Collins <tom@tomlogic.com>",
+      "Copyright (C) 2025 by Tom Collins <tom@scorbit.io>"
+    ],
+    "license": "Open Data Commons Open Database License (ODbL) v1.0",
+    "platform": "stern-sam",
+    "roms": [
+      "st_162",
+      "st_162c"
+    ],
+    "validation": {
+      "checksum": [
+        {
+          "label": "Free Play adjustment",
+          "start": "0x2102120",
+          "end": "0x2102124",
+          "complement": true
+        },
+        {
+          "label": "Balls Per Game adjustment",
+          "start": "0x2102108",
+          "end": "0x210210C",
+          "complement": true
+        },
+        {
+          "label": "Maximum Credits adjustment",
+          "start": "0x2102118",
+          "end": "0x210211C",
+          "complement": true
+        },
+        {
+          "label": "Grand Champion",
+          "start": "0x2102EC0",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "High Score #1",
+          "start": "0x2102EE0",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "High Score #2",
+          "start": "0x2102F00",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "High Score #3",
+          "start": "0x2102F20",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "High Score #4",
+          "start": "0x2102F40",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "Combo Champion",
+          "start": "0x2102F60",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "Warp Champion",
+          "start": "0x2102F80",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "Medals Champion",
+          "start": "0x2102FA0",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        }
+      ]
+    }
+  },
+  "checksum8": [
+    {
+      "label": "Free Play adjustment",
+      "start": "0x02102120",
+      "end": "0x02102124"
+    },
+    {
+      "label": "Balls Per Game adjustment",
+      "start": "0x02102108",
+      "end": "0x0210210C"
+    },
+    {
+      "label": "Maximum Credits adjustment",
+      "start": "0x02102118",
+      "end": "0x0210211C"
+    }
+  ],
+  "game_state": {
+    "scores": [
+      {
+        "label": "Player 1",
+        "encoding": "int",
+        "length": 4,
+        "start": "0x21109E4"
+      },
+      {
+        "label": "Player 2",
+        "encoding": "int",
+        "length": 4,
+        "start": "0x21109E8"
+      },
+      {
+        "label": "Player 3",
+        "encoding": "int",
+        "length": 4,
+        "start": "0x21109EC"
+      },
+      {
+        "label": "Player 4",
+        "encoding": "int",
+        "length": 4,
+        "start": "0x21109F0"
+      }
+    ],
+    "free_play": {
+      "label": "Free Play",
+      "encoding": "bool",
+      "start": "0x02102120"
+    },
+    "max_credits": {
+      "label": "Maximum Credits",
+      "encoding": "int",
+      "start": "0x02102118"
+    },
+    "ball_count": {
+      "label": "Balls Per Game",
+      "encoding": "int",
+      "start": "0x02102108"
+    }
+  },
+  "high_scores": [
+    {
+      "label": "Grand Champion",
+      "short_label": "GC",
+      "initials": {
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11,
+        "start": "0x2102EC0"
+      },
+      "score": {
+        "encoding": "int",
+        "length": 4,
+        "start": "0x2102ED8"
+      }
+    },
+    {
+      "label": "High Score #1",
+      "short_label": "#1",
+      "initials": {
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11,
+        "start": "0x2102EE0"
+      },
+      "score": {
+        "encoding": "int",
+        "length": 4,
+        "start": "0x2102EF8"
+      }
+    },
+    {
+      "label": "High Score #2",
+      "short_label": "#2",
+      "initials": {
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11,
+        "start": "0x2102F00"
+      },
+      "score": {
+        "encoding": "int",
+        "length": 4,
+        "start": "0x2102F18"
+      }
+    },
+    {
+      "label": "High Score #3",
+      "short_label": "#3",
+      "initials": {
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11,
+        "start": "0x2102F20"
+      },
+      "score": {
+        "encoding": "int",
+        "length": 4,
+        "start": "0x2102F38"
+      }
+    },
+    {
+      "label": "High Score #4",
+      "short_label": "#4",
+      "initials": {
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11,
+        "start": "0x2102F40"
+      },
+      "score": {
+        "encoding": "int",
+        "length": 4,
+        "start": "0x2102F58"
+      }
+    }
+  ],
+  "mode_champions": [
+    {
+      "label": "Combo Champion",
+      "initials": {
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11,
+        "start": "0x2102F60"
+      },
+      "score": {
+        "encoding": "int",
+        "length": 4,
+        "start": "0x2102F78",
+        "suffix": " Combos"
+      }
+    },
+    {
+      "label": "Warp Champion",
+      "initials": {
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11,
+        "start": "0x2102F80"
+      },
+      "score": {
+        "encoding": "int",
+        "length": 4,
+        "start": "0x2102F98",
+        "suffix": " Warps"
+      }
+    },
+    {
+      "label": "Medals Champion",
+      "initials": {
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11,
+        "start": "0x2102FA0"
+      },
+      "score": {
+        "encoding": "int",
+        "length": 4,
+        "start": "0x2102FB8",
+        "suffix": " Medals"
+      }
+    }
+  ],
+  "checksum16": [
+    {
+      "start": "0x2102EC0",
+      "length": 30,
+      "label": "Grand Champion"
+    },
+    {
+      "start": "0x2102EE0",
+      "length": 30,
+      "label": "High Score #1"
+    },
+    {
+      "start": "0x2102F00",
+      "length": 30,
+      "label": "High Score #2"
+    },
+    {
+      "start": "0x2102F20",
+      "length": 30,
+      "label": "High Score #3"
+    },
+    {
+      "start": "0x2102F40",
+      "length": 30,
+      "label": "High Score #4"
+    },
+    {
+      "start": "0x2102F60",
+      "length": 30,
+      "label": "Combo Champion"
+    },
+    {
+      "start": "0x2102F80",
+      "length": 30,
+      "label": "Warp Champion"
+    },
+    {
+      "start": "0x2102FA0",
+      "length": 30,
+      "label": "Medals Champion"
+    }
+  ]
+}

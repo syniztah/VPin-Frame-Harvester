@@ -1,0 +1,134 @@
+{
+  "_comment": "Made automatically from the table script (Apollo 13 (Sega 1995)_Bigus(MOD)1.2) by harvester/scriptgen.py. Check the report; edit freely.",
+  "_generated": true,
+  "name": "Apollo 13 (Sega 1995)_Bigus(MOD)1.2",
+  "roms": [
+    "apollo13"
+  ],
+  "trough": [
+    48
+  ],
+  "trough_solenoid": 14,
+  "holes": [
+    {
+      "switch": 13,
+      "coil": 17
+    },
+    {
+      "switch": 16,
+      "coil": 17
+    },
+    {
+      "switch": 14,
+      "coil": 17
+    },
+    {
+      "switch": 17,
+      "coil": 22
+    },
+    {
+      "switch": 18,
+      "coil": 22
+    },
+    {
+      "switch": 19,
+      "coil": 22
+    },
+    {
+      "switch": 20,
+      "coil": 22
+    },
+    {
+      "switch": 21,
+      "coil": 22
+    },
+    {
+      "switch": 22,
+      "coil": 22
+    },
+    {
+      "switch": 23,
+      "coil": 22
+    },
+    {
+      "switch": 24,
+      "coil": 22
+    }
+  ],
+  "coin": 5,
+  "start": 3,
+  "tilt": 1,
+  "slam_tilt": 8,
+  "flippers": [
+    64,
+    63
+  ],
+  "service_buttons": [
+    0,
+    -1,
+    -2
+  ],
+  "coins_per_credit": 1,
+  "launch_button": 9,
+  "playfield": [
+    10,
+    11,
+    12,
+    15,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    38,
+    40,
+    41,
+    43,
+    44,
+    45,
+    46,
+    47,
+    49,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62
+  ],
+  "spinners": [
+    41
+  ],
+  "always_closed": [
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+  ],
+  "nvram_map": "nvram_maps/all/sega/whitestar/apollo13.map.json",
+  "levels": 0,
+  "pulse_ms": 60,
+  "ball_time_s": [
+    20,
+    90
+  ],
+  "single_player_chance": 0.7,
+  "drain": [],
+  "boot_s": 12,
+  "serve_timeout_s": 30
+}

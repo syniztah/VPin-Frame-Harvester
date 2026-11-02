@@ -1,0 +1,94 @@
+{
+  "_comment": "Made automatically from the table script (Rescue 911 (Gottlieb, 1994)v1.0 Ejse83 LED MOD) by harvester/scriptgen.py. Check the report; edit freely.",
+  "_generated": true,
+  "name": "Rescue 911 (Gottlieb, 1994)v1.0 Ejse83 LED MOD",
+  "roms": [
+    "rescu911"
+  ],
+  "trough": [
+    201,
+    200,
+    33
+  ],
+  "trough_solenoid": 28,
+  "holes": [
+    {
+      "switch": 80,
+      "coil": 9
+    },
+    {
+      "switch": 100,
+      "coil": 13
+    }
+  ],
+  "drop_banks": [
+    {
+      "switches": [
+        20,
+        30
+      ],
+      "reset_coil": 8
+    }
+  ],
+  "coin": 0,
+  "start": 4,
+  "tilt": 151,
+  "slam_tilt": -6,
+  "flippers": [
+    141,
+    143
+  ],
+  "service_buttons": [
+    -8
+  ],
+  "coins_per_credit": 1,
+  "playfield": [
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    21,
+    22,
+    31,
+    32,
+    81,
+    85,
+    91,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    110,
+    111,
+    113,
+    114,
+    115,
+    117
+  ],
+  "always_closed": [
+    34
+  ],
+  "nvram_map": "nvram_maps/rescu911.map.json",
+  "levels": 0,
+  "pulse_ms": 60,
+  "ball_time_s": [
+    20,
+    90
+  ],
+  "single_player_chance": 0.7,
+  "drain": [],
+  "boot_s": 12,
+  "serve_timeout_s": 30
+}

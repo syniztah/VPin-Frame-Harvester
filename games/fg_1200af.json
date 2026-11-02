@@ -1,0 +1,105 @@
+{
+  "_comment": "Made automatically from the table script (Family Guy (Stern 2007)_Bigus(MOD)3.0) by harvester/scriptgen.py. Check the report; edit freely.",
+  "_generated": true,
+  "name": "Family Guy (Stern 2007)_Bigus(MOD)3.0",
+  "roms": [
+    "fg_1200af"
+  ],
+  "trough": [
+    21,
+    20,
+    19,
+    18
+  ],
+  "trough_solenoid": 1,
+  "serve_pulse": 22,
+  "holes": [
+    {
+      "switch": 55,
+      "coil": 21
+    },
+    {
+      "switch": 13,
+      "coil": 13
+    }
+  ],
+  "drop_banks": [
+    {
+      "switches": [
+        9
+      ],
+      "reset_coil": null
+    },
+    {
+      "switches": [
+        44,
+        47,
+        45,
+        46
+      ],
+      "reset_coil": null
+    }
+  ],
+  "coin": 65,
+  "start": 16,
+  "tilt": -7,
+  "slam_tilt": -6,
+  "flippers": [
+    82,
+    84
+  ],
+  "service_buttons": [
+    -3,
+    -2,
+    -1,
+    0
+  ],
+  "coins_per_credit": 2,
+  "playfield": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    10,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    39,
+    40,
+    41,
+    42,
+    43,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    57
+  ],
+  "spinners": [
+    39
+  ],
+  "nvram_map": "nvram_maps/all/stern/sam/fg_1200af.map.json",
+  "levels": 0,
+  "pulse_ms": 60,
+  "ball_time_s": [
+    20,
+    90
+  ],
+  "single_player_chance": 0.7,
+  "drain": [],
+  "boot_s": 12,
+  "serve_timeout_s": 30
+}

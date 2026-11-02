@@ -1,0 +1,162 @@
+{
+  "_comment": "Jurassic Park (Data East, jupk_513), from the VPX table script by Dark. Cabinet: tilt 1, start 3, coin 4, slam 7, flippers 82/84, service Black -7 / Green -6 (de.vbs). Trough 14..9 holds 6 balls; coil 16 (lockout) moves one into the eject lane (switch 15), coil 2 kicks it to the shooter lane (16). Launch trigger 41, autofire coil 3, smart bomb 42. Holes: left scoop 35 (coil 4), boat dock 56 (coil 1), right VUK 61 (coil 5), raptor pit 29 (coil 9), T-Rex saucer 55 (coil 7). T-Rex toy: turn motor coil 15 with direction coil 12, switches 31 right / 36 centre / 32 left (only turns while up); bend motor coil 14, switches 57 up / 58 down; it picks the ball out of saucer 55 and swallows it when back up. GUESSES: scoop troughs 37/60 and the T-Rex trough 59 lead to the right VUK 61; toy speeds assume 10 ms script timers.",
+  "name": "Jurassic Park",
+  "roms": [
+    "jupk_513",
+    "jupk_501",
+    "jupk_600"
+  ],
+  "levels": 0,
+  "pulse_ms": 60,
+  "coin": 4,
+  "coins_per_credit": 2,
+  "start": 3,
+  "trough": [
+    14,
+    13,
+    12,
+    11,
+    10,
+    9
+  ],
+  "balls": 6,
+  "trough_solenoid": 2,
+  "eject": {
+    "switch": 15,
+    "load_coil": 16
+  },
+  "shooter_lane": 16,
+  "launch_button": 41,
+  "flippers": [
+    82,
+    84
+  ],
+  "buttons": [
+    42
+  ],
+  "playfield": [
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    33,
+    34,
+    37,
+    38,
+    39,
+    40,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    52,
+    53,
+    59,
+    60
+  ],
+  "holes": [
+    {
+      "switch": 35,
+      "coil": 4
+    },
+    {
+      "switch": 56,
+      "coil": 1
+    },
+    {
+      "switch": 61,
+      "coil": 5
+    },
+    {
+      "switch": 29,
+      "coil": 9
+    },
+    {
+      "switch": 55,
+      "coil": 7
+    }
+  ],
+  "feeds": {
+    "37": 61,
+    "60": 61,
+    "59": 61
+  },
+  "mechs": [
+    {
+      "name": "T-Rex turn",
+      "kind": "linear",
+      "motor": 15,
+      "dir_coil": 12,
+      "min": -23,
+      "max": -3,
+      "start": -14,
+      "speed": 20,
+      "needs": [
+        57
+      ],
+      "switches": [
+        {
+          "switch": 31,
+          "max": -22.9
+        },
+        {
+          "switch": 32,
+          "min": -3.1
+        },
+        {
+          "switch": 36,
+          "min": -14.6,
+          "max": -13.4
+        }
+      ]
+    },
+    {
+      "name": "T-Rex bend",
+      "kind": "oscillate",
+      "motor": 14,
+      "min": -80,
+      "max": 0,
+      "start": 0,
+      "speed": 25,
+      "switches": [
+        {
+          "switch": 57,
+          "min": -1.5
+        },
+        {
+          "switch": 58,
+          "max": -79
+        }
+      ],
+      "carries": 55,
+      "pick": -80,
+      "drop": 0
+    }
+  ],
+  "outlanes": [
+    21,
+    24
+  ],
+  "drain": [],
+  "ball_time_s": [
+    20,
+    90
+  ],
+  "single_player_chance": 0.5,
+  "tilt": 1,
+  "slam_tilt": 7,
+  "service_buttons": [
+    -7,
+    -6
+  ],
+  "nvram_map": "nvram_maps/jupk_513.map.json"
+}

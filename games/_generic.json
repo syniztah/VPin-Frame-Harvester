@@ -1,0 +1,8 @@
+{
+  "_comment": "Used by the app for attract-mode runs on a ROM that has no game file yet. No switches, no memory map: it only watches.",
+  "name": "Unknown table (attract only)",
+  "levels": 0,
+  "trough": [],
+  "playfield": [],
+  "flippers": []
+}

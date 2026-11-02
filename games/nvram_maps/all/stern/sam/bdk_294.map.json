@@ -1,0 +1,331 @@
+{
+  "_notes": [
+    "game_state added locally, from a 4-player game played through the cabinet's streamer rather than",
+    "by hand -- nothing here was read off a display and typed back.",
+    "current_player and current_ball are adjacent in CPU RAM at 0x000348B8 and 0x000348B9, player low",
+    "and ball high, the shape every Stern SAM game checked uses. The player byte completed 1->2->3",
+    "three times, once per ball; the ball byte once.",
+    "Scores are 4 bytes on 8-byte centres from 0x021109F0, the only group of four evenly spaced values",
+    "that rose monotonically through the game. A different base again -- 0x021109E4 on 24, X-Men,",
+    "twd_156c and Avatar, 0x02110A0C on Star Trek, 0x02110A24 on LUCI, 0x02110A9C on twd_160h.",
+    "The DMD confirms this map's champion labels: after game over it cycled BATMOBILE HURRY-UP",
+    "Confirmed after the table exited: the map decodes that game as 2,108,050 / 2,064,720 /",
+    "1,217,240 / 1,793,870, exactly what the DMD showed, with player_count 4. All three champion",
+    "entries decode as the machine displays them -- 'K O' 10,000,000, 'M R' 25,000,000 and 'JLS'",
+    "75,000,000 -- so the labels this map already carried are right.",
+    "game_over, tilted and credits come from a 453-frame recording of live memory spanning an",
+    "operator-menu session and two consecutive games, the first tilted on ball 1. The session also",
+    "adjustment indices 30 and 32 as the free_play-relative rule predicted.",
+    "0x000348EA is the status bitfield trn_174h, avr_200 and avs_170 keep at ball+0x31, in a variant",
+    "without bit 0x01 during play: 1 in attract, 18 (0x12) playing, 20 (0x14) for exactly the eight",
+    "samples between the tilt and the end of the tilted ball, during which player 1's score sat",
+    "frozen at 275,210. The same declaration as those games -- game_over mask 0x12 inverted, tilted",
+    "bit 0x04 -- decodes correctly in all 453 frames across both games.",
+    "credits at 0x0211100C, the seventh SAM game measured at that address: rose to 2 with the coins,",
+    "then fell once at each of the two game starts."
+  ],
+  "_fileformat": 0.9,
+  "_metadata": {
+    "version": 12,
+    "license": "Open Data Commons Open Database License (ODbL) v1.0",
+    "platform": "stern-sam",
+    "roms": [
+      "bdk_294"
+    ],
+    "validation": {
+      "checksum": [
+        {
+          "label": "Free Play adjustment",
+          "start": "0x2102110",
+          "end": "0x2102114",
+          "complement": true
+        },
+        {
+          "label": "Balls Per Game adjustment",
+          "start": "0x21020F8",
+          "end": "0x21020FC",
+          "complement": true
+        },
+        {
+          "label": "Maximum Credits adjustment",
+          "start": "0x2102108",
+          "end": "0x210210C",
+          "complement": true
+        },
+        {
+          "label": "High Score #{#}",
+          "start": "0x02102B00",
+          "repeat": {
+            "count": 5,
+            "step": 32
+          },
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "Mode Champ #{#}",
+          "start": "0x02102BA0",
+          "repeat": {
+            "count": 3,
+            "step": 32
+          },
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        }
+      ]
+    }
+  },
+  "checksum8": [
+    {
+      "label": "Free Play adjustment",
+      "start": "0x02102110",
+      "end": "0x02102114"
+    },
+    {
+      "label": "Balls Per Game adjustment",
+      "start": "0x021020F8",
+      "end": "0x021020FC"
+    },
+    {
+      "label": "Maximum Credits adjustment",
+      "start": "0x02102108",
+      "end": "0x0210210C"
+    }
+  ],
+  "checksum16": [
+    {
+      "label": "Grand Champion",
+      "start": "0x02102B00",
+      "length": 30
+    },
+    {
+      "label": "First Place",
+      "start": "0x02102B20",
+      "length": 30
+    },
+    {
+      "label": "Second Place",
+      "start": "0x02102B40",
+      "length": 30
+    },
+    {
+      "label": "Third Place",
+      "start": "0x02102B60",
+      "length": 30
+    },
+    {
+      "label": "Fourth Place",
+      "start": "0x02102B80",
+      "length": 30
+    },
+    {
+      "label": "Batmobile Hurry-Up Champion",
+      "start": "0x02102BA0",
+      "length": 30
+    },
+    {
+      "label": "Bat Signal Challenge Champion",
+      "start": "0x02102BC0",
+      "length": 30
+    },
+    {
+      "label": "Gotham City Champion",
+      "start": "0x02102BE0",
+      "length": 30
+    }
+  ],
+  "game_state": {
+    "player_count": {
+      "label": "Player Count",
+      "encoding": "int",
+      "start": "0x02110900"
+    },
+    "free_play": {
+      "label": "Free Play",
+      "encoding": "bool",
+      "start": "0x02102110"
+    },
+    "credits": {
+      "label": "Credits",
+      "encoding": "int",
+      "start": "0x0211100C"
+    },
+    "max_credits": {
+      "label": "Maximum Credits",
+      "encoding": "int",
+      "start": "0x02102108"
+    },
+    "ball_count": {
+      "label": "Balls Per Game",
+      "encoding": "int",
+      "start": "0x021020F8"
+    },
+    "current_player": {
+      "label": "Player",
+      "encoding": "int",
+      "start": "0x000348B8"
+    },
+    "current_ball": {
+      "label": "Ball",
+      "encoding": "int",
+      "start": "0x000348B9"
+    },
+    "game_over": {
+      "label": "Game Over",
+      "encoding": "bool",
+      "start": "0x000348EA",
+      "mask": "0x12",
+      "invert": true
+    },
+    "tilted": {
+      "label": "Tilted",
+      "encoding": "bool",
+      "start": "0x000348EA",
+      "mask": "0x04"
+    },
+    "scores": [
+      {
+        "label": "Player 1",
+        "encoding": "int",
+        "length": 4,
+        "start": "0x021109F0"
+      },
+      {
+        "label": "Player 2",
+        "encoding": "int",
+        "length": 4,
+        "start": "0x021109F8"
+      },
+      {
+        "label": "Player 3",
+        "encoding": "int",
+        "length": 4,
+        "start": "0x02110A00"
+      },
+      {
+        "label": "Player 4",
+        "encoding": "int",
+        "length": 4,
+        "start": "0x02110A08"
+      }
+    ]
+  },
+  "high_scores": [
+    {
+      "label": "Grand Champion",
+      "initials": {
+        "start": "0x02102B00",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102B18",
+        "encoding": "int",
+        "length": 4
+      }
+    },
+    {
+      "label": "First Place",
+      "initials": {
+        "start": "0x02102B20",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102B38",
+        "encoding": "int",
+        "length": 4
+      }
+    },
+    {
+      "label": "Second Place",
+      "initials": {
+        "start": "0x02102B40",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102B58",
+        "encoding": "int",
+        "length": 4
+      }
+    },
+    {
+      "label": "Third Place",
+      "initials": {
+        "start": "0x02102B60",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102B78",
+        "encoding": "int",
+        "length": 4
+      }
+    },
+    {
+      "label": "Fourth Place",
+      "initials": {
+        "start": "0x02102B80",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102B98",
+        "encoding": "int",
+        "length": 4
+      }
+    }
+  ],
+  "mode_champions": [
+    {
+      "label": "Batmobile Hurry-Up Champion",
+      "initials": {
+        "start": "0x02102BA0",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102BB8",
+        "encoding": "int",
+        "length": 4
+      }
+    },
+    {
+      "label": "Bat Signal Challenge Champion",
+      "initials": {
+        "start": "0x02102BC0",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102BD8",
+        "encoding": "int",
+        "length": 4
+      }
+    },
+    {
+      "label": "Gotham City Champion",
+      "initials": {
+        "start": "0x02102BE0",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102BF8",
+        "encoding": "int",
+        "length": 4
+      }
+    }
+  ]
+}

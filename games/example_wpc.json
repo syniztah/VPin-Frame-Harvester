@@ -1,0 +1,19 @@
+{
+  "_comment": "TEMPLATE. Switch numbers are examples only: check every one against your table's switch matrix (PinMAME switch test or the VPX table script). 22 = coin door closed and 13 = start are the usual WPC values; the rest are placeholders.",
+  "name": "Example WPC table",
+  "levels": 0,
+  "pulse_ms": 60,
+  "always_closed": [22],
+  "start": 13,
+  "trough": [32, 33, 34],
+  "shooter_lane": 27,
+  "launch_button": null,
+  "flippers": [],
+  "drain": [31],
+  "playfield": [41, 42, 43, 44, 45, 46, 51, 52, 53, 54, 61, 62, 63, 64, 65],
+  "ball_time_s": [20, 90],
+  "masks": [
+    { "x": 0, "y": 0, "w": 128, "h": 16, "name": "score" },
+    { "x": 0, "y": 26, "w": 128, "h": 6, "name": "ball/credits line" }
+  ]
+}

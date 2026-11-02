@@ -1,0 +1,483 @@
+{
+  "_notes": [
+    "game_state added locally, from a 4-player game driven through the cabinet's streamer.",
+    "current_player and current_ball are adjacent in CPU RAM at 0x00032AB8 and 0x00032AB9, player low",
+    "Scores are 4 bytes on 4-byte centres from 0x021109E4. The sweep also offered 0x00036470 in CPU",
+    "RAM, reading 251,000 / 250,500 / 250,500 / 251,500 -- four plausible, evenly spaced, monotonic",
+    "values, and wrong. Scores are in NVRAM on every SAM game measured, which is what rejects it.",
+    "checksum16 declared for all twelve champion records: 32-byte records, initials at +0, score at",
+    "+0x18 (Best Combo keeps a 1-byte counter at +0x1A instead), little-endian checksum16 at +28 as",
+    "0xFFFF minus the sum of the first 28 bytes -- start..length 30 covers the summed bytes plus the",
+    "checksum. All twelve validate against a captured NVRAM image.",
+    "game_over, tilted and credits come from a 1,099-frame recording of live memory spanning an",
+    "0x00032AEA is the status bitfield most SAM games keep at ball+0x31, in trn_174h's exact",
+    "encoding: 1 in attract, 19 (0x13) in play, 21 (0x15) for the eighteen samples between the tilt",
+    "and the end of the tilted ball, during which player 1's score sat frozen at 138,820. game_over",
+    "(mask 0x12, inverted) is correct in all 1,099 frames; tilted is bit 0x04.",
+    "credits at 0x0211100C, the sixteenth SAM game at that address: rose to 9 with the coins (capped",
+    "by the Maximum Credits just set) and fell to 8 at game start."
+  ],
+  "_fileformat": 0.9,
+  "_metadata": {
+    "version": 13,
+    "license": "Open Data Commons Open Database License (ODbL) v1.0",
+    "platform": "stern-sam",
+    "roms": [
+      "smanve_100",
+      "smanve_101",
+      "smanve_101c"
+    ],
+    "validation": {
+      "checksum": [
+        {
+          "label": "Free Play adjustment",
+          "start": "0x2102120",
+          "end": "0x2102124",
+          "complement": true
+        },
+        {
+          "label": "Master Volume",
+          "start": "0x2110250",
+          "end": "0x2110251",
+          "complement": true
+        },
+        {
+          "label": "Balls Per Game adjustment",
+          "start": "0x2102108",
+          "end": "0x210210C",
+          "complement": true
+        },
+        {
+          "label": "Maximum Credits adjustment",
+          "start": "0x2102118",
+          "end": "0x210211C",
+          "complement": true
+        },
+        {
+          "label": "Grand Champion",
+          "start": "0x2102B80",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "First Place",
+          "start": "0x2102BA0",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "Second Place",
+          "start": "0x2102BC0",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "Third Place",
+          "start": "0x2102BE0",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "Fourth Place",
+          "start": "0x2102C00",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "Combo Champion",
+          "start": "0x2102C20",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "Best Combo Champion",
+          "start": "0x2102C40",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "Spider Champion",
+          "start": "0x2102C60",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "Spider Sense Champion",
+          "start": "0x2102C80",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "Battle Royale Champion",
+          "start": "0x2102CA0",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "Super Hero Champion",
+          "start": "0x2102CC0",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        },
+        {
+          "label": "Best Bonus Champion",
+          "start": "0x2102CE0",
+          "length": 30,
+          "bits": 16,
+          "complement": true
+        }
+      ]
+    }
+  },
+  "checksum8": [
+    {
+      "label": "Free Play adjustment",
+      "start": "0x02102120",
+      "end": "0x02102124"
+    },
+    {
+      "label": "Master Volume",
+      "start": "0x02110250",
+      "end": "0x02110251"
+    },
+    {
+      "label": "Balls Per Game adjustment",
+      "start": "0x02102108",
+      "end": "0x0210210C"
+    },
+    {
+      "label": "Maximum Credits adjustment",
+      "start": "0x02102118",
+      "end": "0x0210211C"
+    }
+  ],
+  "checksum16": [
+    {
+      "label": "Grand Champion",
+      "start": "0x02102B80",
+      "length": 30
+    },
+    {
+      "label": "First Place",
+      "start": "0x02102BA0",
+      "length": 30
+    },
+    {
+      "label": "Second Place",
+      "start": "0x02102BC0",
+      "length": 30
+    },
+    {
+      "label": "Third Place",
+      "start": "0x02102BE0",
+      "length": 30
+    },
+    {
+      "label": "Fourth Place",
+      "start": "0x02102C00",
+      "length": 30
+    },
+    {
+      "label": "Combo Champion",
+      "start": "0x02102C20",
+      "length": 30
+    },
+    {
+      "label": "Best Combo Champion",
+      "start": "0x02102C40",
+      "length": 30
+    },
+    {
+      "label": "Spider Champion",
+      "start": "0x02102C60",
+      "length": 30
+    },
+    {
+      "label": "Spider Sense Champion",
+      "start": "0x02102C80",
+      "length": 30
+    },
+    {
+      "label": "Battle Royale Champion",
+      "start": "0x02102CA0",
+      "length": 30
+    },
+    {
+      "label": "Super Hero Champion",
+      "start": "0x02102CC0",
+      "length": 30
+    },
+    {
+      "label": "Best Bonus Champion",
+      "start": "0x02102CE0",
+      "length": 30
+    }
+  ],
+  "game_state": {
+    "player_count": {
+      "label": "Player Count",
+      "encoding": "int",
+      "start": "0x02110900"
+    },
+    "free_play": {
+      "label": "Free Play",
+      "encoding": "bool",
+      "start": "0x02102120"
+    },
+    "credits": {
+      "label": "Credits",
+      "encoding": "int",
+      "start": "0x0211100C"
+    },
+    "max_credits": {
+      "label": "Maximum Credits",
+      "encoding": "int",
+      "start": "0x02102118"
+    },
+    "ball_count": {
+      "label": "Balls Per Game",
+      "encoding": "int",
+      "start": "0x02102108"
+    },
+    "current_player": {
+      "label": "Player",
+      "encoding": "int",
+      "start": "0x00032AB8"
+    },
+    "current_ball": {
+      "label": "Ball",
+      "encoding": "int",
+      "start": "0x00032AB9"
+    },
+    "game_over": {
+      "label": "Game Over",
+      "encoding": "bool",
+      "start": "0x00032AEA",
+      "mask": "0x12",
+      "invert": true
+    },
+    "tilted": {
+      "label": "Tilted",
+      "encoding": "bool",
+      "start": "0x00032AEA",
+      "mask": "0x04"
+    },
+    "scores": [
+      {
+        "label": "Player 1",
+        "encoding": "int",
+        "length": 4,
+        "start": "0x021109E4"
+      },
+      {
+        "label": "Player 2",
+        "encoding": "int",
+        "length": 4,
+        "start": "0x021109E8"
+      },
+      {
+        "label": "Player 3",
+        "encoding": "int",
+        "length": 4,
+        "start": "0x021109EC"
+      },
+      {
+        "label": "Player 4",
+        "encoding": "int",
+        "length": 4,
+        "start": "0x021109F0"
+      }
+    ],
+    "volume": {
+      "label": "Master Volume",
+      "encoding": "int",
+      "start": "0x02110250",
+      "min": 0,
+      "max": 63,
+      "default": 40
+    }
+  },
+  "high_scores": [
+    {
+      "label": "Grand Champion",
+      "initials": {
+        "start": "0x02102b80",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102b98",
+        "encoding": "int",
+        "length": 4
+      }
+    },
+    {
+      "label": "First Place",
+      "initials": {
+        "start": "0x02102ba0",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102bb8",
+        "encoding": "int",
+        "length": 4
+      }
+    },
+    {
+      "label": "Second Place",
+      "initials": {
+        "start": "0x02102bc0",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102bd8",
+        "encoding": "int",
+        "length": 4
+      }
+    },
+    {
+      "label": "Third Place",
+      "initials": {
+        "start": "0x02102be0",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102bf8",
+        "encoding": "int",
+        "length": 4
+      }
+    },
+    {
+      "label": "Fourth Place",
+      "initials": {
+        "start": "0x02102c00",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102c18",
+        "encoding": "int",
+        "length": 4
+      }
+    }
+  ],
+  "mode_champions": [
+    {
+      "label": "Combo Champion",
+      "initials": {
+        "start": "0x02102c20",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "counter": {
+        "start": "0x02102c38",
+        "encoding": "int",
+        "length": 4
+      }
+    },
+    {
+      "label": "Best Combo Champion",
+      "initials": {
+        "start": "0x02102c40",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "counter": {
+        "start": "0x02102c5a",
+        "encoding": "int",
+        "length": 1
+      }
+    },
+    {
+      "label": "Spider Champion",
+      "initials": {
+        "start": "0x02102c60",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "counter": {
+        "start": "0x02102c78",
+        "encoding": "int",
+        "length": 4
+      }
+    },
+    {
+      "label": "Spider Sense Champion",
+      "initials": {
+        "start": "0x02102c80",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102c98",
+        "encoding": "int",
+        "length": 4
+      }
+    },
+    {
+      "label": "Battle Royale Champion",
+      "initials": {
+        "start": "0x02102ca0",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102cb8",
+        "encoding": "int",
+        "length": 4
+      }
+    },
+    {
+      "label": "Super Hero Champion",
+      "initials": {
+        "start": "0x02102cc0",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102cd8",
+        "encoding": "int",
+        "length": 4
+      }
+    },
+    {
+      "label": "Best Bonus Champion",
+      "initials": {
+        "start": "0x02102ce0",
+        "encoding": "ch",
+        "null": "terminate",
+        "length": 11
+      },
+      "score": {
+        "start": "0x02102cf8",
+        "encoding": "int",
+        "length": 4
+      }
+    }
+  ]
+}

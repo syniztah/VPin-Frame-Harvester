@@ -1,0 +1,100 @@
+{
+  "_comment": "Made automatically from the table script (Breakshot (Capcom 1996) VPW v1.1) by harvester/scriptgen.py. Check the report; edit freely.",
+  "_generated": true,
+  "name": "Breakshot (Capcom 1996) VPW v1.1",
+  "roms": [
+    "bsv103"
+  ],
+  "trough": [
+    36,
+    37,
+    38
+  ],
+  "trough_solenoid": 2,
+  "outhole": {
+    "switch": 35,
+    "coil": 1
+  },
+  "holes": [
+    {
+      "switch": 67,
+      "coil": 8
+    },
+    {
+      "switch": 68,
+      "coil": 25
+    },
+    {
+      "switch": 69,
+      "coil": 26
+    },
+    {
+      "switch": 70,
+      "coil": 32
+    }
+  ],
+  "drop_banks": [
+    {
+      "switches": [
+        48,
+        49,
+        50
+      ],
+      "reset_coil": 7
+    },
+    {
+      "switches": [
+        73,
+        74,
+        75
+      ],
+      "reset_coil": 13
+    }
+  ],
+  "coin": 1,
+  "start": 7,
+  "tilt": 30,
+  "slam_tilt": 9,
+  "flippers": [
+    82,
+    84
+  ],
+  "service_buttons": [
+    8
+  ],
+  "coins_per_credit": 1,
+  "shooter_lane": 43,
+  "playfield": [
+    44,
+    45,
+    46,
+    47,
+    51,
+    53,
+    54,
+    55,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    65,
+    76,
+    77,
+    78,
+    79
+  ],
+  "nvram_map": "nvram_maps/all/capcom/bsv103.map.json",
+  "levels": 0,
+  "pulse_ms": 60,
+  "ball_time_s": [
+    20,
+    90
+  ],
+  "single_player_chance": 0.7,
+  "drain": [],
+  "boot_s": 12,
+  "serve_timeout_s": 30
+}
