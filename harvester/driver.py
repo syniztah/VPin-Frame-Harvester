@@ -704,7 +704,11 @@ class FuzzStrategy(Strategy):
                 self.next_action_ms = t + n * gap + 500
                 return
             r = self.rng.random()
-            if r < 0.15 and g.flippers:
+            # Hands off the flippers for the first seconds of a game: some games ask "hold right
+            # button for French" (Family Guy) or similar, and a held flipper would answer it
+            early = self.game_started_ms is not None and \
+                t < self.game_started_ms + 3000 * max(1, self.players) + 12000
+            if r < 0.15 and g.flippers and not early:
                 self.pulse(t, self.rng.choice(g.flippers), self.rng.choice([80, 250, 1500, 5000]))
             elif r < 0.18 and g.buttons:
                 self.pulse(t, self.rng.choice(g.buttons), 150)

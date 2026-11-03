@@ -32,7 +32,7 @@ HARVEST_EXE = os.path.join(HERE, "harvest.exe")    # packaged app: the command-l
 ASSETS = os.path.join(getattr(sys, "_MEIPASS", HERE), "assets")
 ICON_PNG = os.path.join(ASSETS, "icon.png")
 
-VERSION = "1.0.1"
+VERSION = "1.0.3"
 GITHUB_URL = "https://github.com/syniztah/VPin-Frame-Harvester/releases"   # About window link
 SPLASH_MS = 1500       # how long the splash screen shows
 
