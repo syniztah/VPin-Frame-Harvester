@@ -522,7 +522,7 @@ def main(argv=None):
     sub = p.add_subparsers(dest="cmd", required=True)
 
     r = sub.add_parser("run")
-    r.add_argument("--rom", required=True)
+    r.add_argument("--rom", required=True, type=str.lower)
     r.add_argument("--game", required=True)
     r.add_argument("--out", required=True)
     r.add_argument("--strategy", choices=sorted(STRATEGIES), default="fuzz")
@@ -570,12 +570,12 @@ def main(argv=None):
 
     fm = sub.add_parser("find-map", help="work out a table's memory map from recorded snapshots")
     fm.add_argument("sources", nargs="+", help="run folders (out\\<rom>) with memory snapshots")
-    fm.add_argument("--rom", required=True)
+    fm.add_argument("--rom", required=True, type=str.lower)
     fm.add_argument("--out", default=None)
     fm.set_defaults(fn=cmd_find_map)
 
     ls = sub.add_parser("low-scores")
-    ls.add_argument("--rom", required=True)
+    ls.add_argument("--rom", required=True, type=str.lower)
     ls.add_argument("--game", required=True)
     ls.set_defaults(fn=cmd_low_scores)
 

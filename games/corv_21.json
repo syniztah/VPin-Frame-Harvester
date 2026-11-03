@@ -1,0 +1,93 @@
+{
+  "_comment": "Made automatically from the table script (Corvette (Bally 1994)_Bigus(MOD)3.0) by harvester/scriptgen.py. Check the report; edit freely.",
+  "_generated": true,
+  "name": "Corvette (Bally 1994)_Bigus(MOD)3.0",
+  "roms": [
+    "corv_21"
+  ],
+  "holes": [
+    {
+      "switch": 36,
+      "coil": 4
+    }
+  ],
+  "coin": 1,
+  "start": 13,
+  "tilt": 14,
+  "slam_tilt": 21,
+  "flippers": [
+    112,
+    114
+  ],
+  "service_buttons": [
+    5,
+    6,
+    7,
+    8
+  ],
+  "game_on_coil": 31,
+  "coins_per_credit": 2,
+  "playfield": [
+    11,
+    12,
+    15,
+    16,
+    17,
+    18,
+    31,
+    32,
+    33,
+    34,
+    35,
+    38,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    57,
+    58,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    71,
+    72,
+    75,
+    76,
+    77,
+    78,
+    81,
+    82,
+    83,
+    84,
+    86,
+    87,
+    88
+  ],
+  "spinners": [
+    18
+  ],
+  "always_closed": [
+    22,
+    24
+  ],
+  "nvram_map": "nvram_maps/all/williams/wpc/corv_21.map.json",
+  "levels": 0,
+  "pulse_ms": 60,
+  "ball_time_s": [
+    20,
+    90
+  ],
+  "single_player_chance": 0.7,
+  "drain": [],
+  "boot_s": 12,
+  "serve_timeout_s": 30
+}

@@ -182,7 +182,7 @@ class Runner:
         self.job_started = time.monotonic()
         self.job_minutes = float(args[args.index("--minutes") + 1]) if "--minutes" in args else 0.0
         env = dict(os.environ)
-        env["LIBPINMAME"] = self.app.v_dll.get()
+        env["LIBPINMAME"] = self.app._dll()
         env["PINMAME_PATH"] = self.app.v_pm.get()
         env["PYTHONUNBUFFERED"] = "1"
         if FROZEN:
@@ -343,7 +343,7 @@ class App(tk.Tk):
             self._splash = None
         self.deiconify()
         self.lift()
-        if not os.path.exists(self.v_dll.get()):
+        if not self._dll():
             self.after(300, self._setup_dialog)     # first start: ask where PinMAME is
 
     def _about(self):
@@ -503,6 +503,22 @@ class App(tk.Tk):
                 return d
         return None
 
+    def _dll(self) -> str:
+        """The libpinmame file to use ('' if none). If the setting is a folder (easy to pick by
+        mistake), use the libpinmame inside it - never VPinMAME64.dll, which is VPX's plug-in."""
+        p = self.v_dll.get().strip().strip('"')
+        if os.path.isfile(p):
+            return p
+        if os.path.isdir(p):
+            names = sorted(os.listdir(p), key=str.lower)
+            for want in (lambda n: n.lower() in ("pinmame64.dll", "pinmame.dll", "libpinmame.so",
+                                                  "libpinmame.dylib"),
+                         lambda n: n.lower().startswith("libpinmame") and n.lower().endswith(".dll")):
+                for n in names:
+                    if want(n):
+                        return os.path.join(p, n)
+        return ""
+
     def _roms(self) -> list[str]:
         d = self._roms_dir()
         if not d:
@@ -518,7 +534,7 @@ class App(tk.Tk):
             self.v_pm.set(os.path.dirname(os.path.normpath(base)))     # PinMAME wants the folder above
             return
         n = len(self._roms())
-        dll_ok = os.path.exists(self.v_dll.get())
+        dll_ok = bool(self._dll())
         if not dll_ok:
             self.v_pm_info.set("●  libpinmame not found - press PinMAME setup   ")
         elif n:
@@ -759,7 +775,7 @@ class App(tk.Tk):
         rom, game = self.v_rom.get(), self.v_game.get()
         self.l_rom.configure(text=rom or "—")
         if rom:
-            ok = rom in self._roms()
+            ok = rom.lower() in {r.lower() for r in self._roms()}
             self.l_rom_ok.configure(text="✓ in your roms folder" if ok else "✗ not in your roms folder",
                                     fg=OKFG if ok else DANGERFG)
         else:
@@ -846,7 +862,7 @@ class App(tk.Tk):
             messagebox.showwarning("ROM not found", f"The script ({src}) doesn't say which ROM it uses "
                                    "(no cGameName).")
             return
-        if rom not in self._roms():
+        if rom.lower() not in {r.lower() for r in self._roms()}:
             messagebox.showwarning("ROM missing",
                                    f"This table uses the ROM '{rom}', but {rom}.zip isn't in your roms "
                                    f"folder ({self._roms_dir() or 'not found'}).\n\nCopy it there, then choose "
@@ -937,7 +953,7 @@ class App(tk.Tk):
         self._running(True, "Creating NVRAM (30 s)…")
 
     def _check_dll(self) -> bool:
-        if not os.path.exists(self.v_dll.get()):
+        if not self._dll():
             messagebox.showwarning("libpinmame", "libpinmame isn't set up yet. Press PinMAME setup (top right).")
             return False
         return True

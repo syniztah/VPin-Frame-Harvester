@@ -29,8 +29,8 @@ You don't need Python for the release version.
 
 - **libpinmame** (the PinMAME library). Download the Windows x64 build from the
   [PinMAME releases](https://github.com/vpinball/pinmame/releases)
-  (`libpinmame-…-win-x64.zip`) and unzip it, for example to `C:\libpinmame`.
-  Older builds also work, but then the harvester can't read the game's memory
+  (`libpinmame-3.7.0-…-win-x64.zip` or newer) and unzip it, for example to `C:\libpinmame`.
+  It's a different download from VPinMAME and PinMAME. Older builds also work, but then the harvester can't read the game's memory
   (no high-score lowering, ball/player tracking or map finding); the log says so.
 - **Your ROMs.** Put the ROM zips in `C:\libpinmame\roms\`. ROMs are not
   included and never will be.

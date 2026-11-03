@@ -162,7 +162,7 @@ def rom_name(script: str) -> str | None:
         m = re.search(r'(?i)\bcGameName\s*=\s*"([^"]+)"', st) or \
             re.search(r'(?i)\.GameName\s*=\s*"([^"]+)"', st)
         if m:
-            return m.group(1)
+            return m.group(1).strip().lower()     # PinMAME's ROM names are all lower case
     return None
 
 
@@ -274,6 +274,14 @@ def make_game(script: str, rom: str | None = None, table: str = "") -> tuple[dic
     g: dict = {"name": table or rom or "Unknown table", "roms": [rom] if rom else []}
     cand = [v for v in stacks if "trough" in v or any("true" in a.lower() or a.strip() == "1"
                                                          for a in method(v, "istrough"))]
+    if not cand:
+        # a ball stack under another name (Corvette's "bsswk"): several switches, starts
+        # with balls in it, and a coil that releases them
+        cand = [v for v in stacks if len(stack_switches(v)) >= 2
+                and any(re.fullmatch(r"\s*\d+\s*", a) and int(a) > 0 for a in method(v, "balls"))
+                and any(re.search(rf"\b{v}\.(solout|exitsol_on)", coil_text(c)) for c in sol)]
+        if cand:
+            rep.append(f"Trough: '{cand[0]}' starts with balls in it - taken as the trough.")
     trough = max(cand, key=lambda v: len(stack_switches(v)), default=None)
     if trough and len(made) >= 2 and len(made) > len(stack_switches(trough)):
         rep.append(f"? {trough} looks like a ball lock, not the trough (the table puts its own "
@@ -521,6 +529,13 @@ def make_game(script: str, rom: str | None = None, table: str = "") -> tuple[dic
                 if ons:
                     shooter = ons[0]
                     break
+    if shooter is None and g.get("trough_solenoid") is not None:
+        # "only release a ball if the shooter lane is empty": If Controller.Switch(15)=False Then ...
+        t = coil_text(g["trough_solenoid"])
+        for x in re.findall(r"controller\.switch\s*\(\s*(\d+)\s*\)\s*(?:=\s*(?:false|0)\b|<>\s*(?:true|1)\b)", t):
+            if int(x) not in trough_sw:
+                shooter = int(x)
+                break
     if shooter is None:
         for raw in script.replace("\r", "").split("\n"):
             if re.search(r"(?i)(plunger|shooter)\s*lane", raw):
@@ -626,7 +641,7 @@ def game_file_for(rom: str) -> str | None:
             d = json.load(open(p))
         except Exception:
             continue
-        if rom in d.get("roms", []):
+        if rom.lower() in [r.lower() for r in d.get("roms", [])]:
             if not d.get("_generated"):
                 return p
             found = found or p

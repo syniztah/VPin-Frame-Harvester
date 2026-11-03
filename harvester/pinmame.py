@@ -124,7 +124,17 @@ class PinMame:
         lib_path = lib_path or os.environ.get("LIBPINMAME")
         if not lib_path:
             sys.exit("Set LIBPINMAME to the path of the libpinmame shared library.")
-        self.lib = C.CDLL(lib_path)
+        if os.path.isdir(lib_path):
+            sys.exit(f"'{lib_path}' is a folder. In PinMAME setup, pick the libpinmame file inside it "
+                     "(pinmame64.dll), not VPinMAME64.dll.")
+        try:
+            self.lib = C.CDLL(lib_path)
+        except OSError as e:
+            sys.exit(f"Couldn't load libpinmame from '{lib_path}' ({e}). In PinMAME setup, pick "
+                     "pinmame64.dll from the libpinmame download (64-bit).")
+        if not hasattr(self.lib, "PinmameRun"):
+            sys.exit(f"'{os.path.basename(lib_path)}' isn't libpinmame (VPinMAME64.dll is VPX's plug-in, "
+                     "a different thing). In PinMAME setup, pick pinmame64.dll from the libpinmame download.")
         self._bind()
         self.frames: "queue.Queue[RawFrame]" = queue.Queue(maxsize=10000)
         self.dropped = 0
