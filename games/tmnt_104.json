@@ -5,6 +5,16 @@
   "roms": [
     "tmnt_104"
   ],
+  "trough": [
+    13,
+    12,
+    11
+  ],
+  "trough_solenoid": 2,
+  "outhole": {
+    "switch": 10,
+    "coil": 1
+  },
   "holes": [
     {
       "switch": 41,
@@ -23,12 +33,9 @@
     -7,
     -6
   ],
+  "game_on_coil": 23,
   "coins_per_credit": 2,
   "playfield": [
-    10,
-    11,
-    12,
-    13,
     14,
     17,
     18,

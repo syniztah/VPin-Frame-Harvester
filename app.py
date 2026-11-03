@@ -32,7 +32,7 @@ HARVEST_EXE = os.path.join(HERE, "harvest.exe")    # packaged app: the command-l
 ASSETS = os.path.join(getattr(sys, "_MEIPASS", HERE), "assets")
 ICON_PNG = os.path.join(ASSETS, "icon.png")
 
-VERSION = "1.0.3"
+VERSION = "1.0.4"
 GITHUB_URL = "https://github.com/syniztah/VPin-Frame-Harvester/releases"   # About window link
 SPLASH_MS = 1500       # how long the splash screen shows
 
@@ -1210,7 +1210,12 @@ class App(tk.Tk):
     def _show_digits(self):
         p = self._digits_png()
         if not p or not os.path.exists(p):
-            messagebox.showinfo("No digits yet", "Press 'Learn digits' first.")
+            learned_none = p and os.path.exists(p.replace(".png", ".json"))
+            messagebox.showinfo("No digits yet", (
+                "Learning ran but found no digits for this table - there's no picture to check.\n\n"
+                "Usually that means the runs don't have enough score changes yet (do more Game play "
+                "runs), or this table's score font isn't one the learner recognises. Skipping digits "
+                "is fine: the dump is just bigger.") if learned_none else "Press 'Learn digits' first.")
             return
         w = tk.Toplevel(self, bg=PANEL)
         w.title("Learned digits - should be ONLY numbers")

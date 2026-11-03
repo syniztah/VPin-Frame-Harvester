@@ -356,6 +356,14 @@ def cmd_learn_digits(a):
         frames += read_txt(src if src.endswith(".txt") else os.path.join(src, "frames.txt"))
     before = len(game.digit_shapes)
     digits = glyphs.learn(frames, known=game.digit_shapes)
+    if len(digits) - before < 10:
+        # Few clean "only a digit changed" moments (TMNT: its score screens are busy, and most frames
+        # are dissolve effects). Look again allowing a few more changed shapes at once.
+        wider = glyphs.learn(frames, max_changed=8, known=game.digit_shapes)
+        if len(wider) > len(digits):
+            print(f"Few digits with the strict search - a wider search found {len(wider) - before}. "
+                  f"Check the picture carefully.")
+            digits = wider
     path = game.digits_path()
     glyphs.save(digits, path)
     png = os.path.splitext(path)[0] + ".png"
