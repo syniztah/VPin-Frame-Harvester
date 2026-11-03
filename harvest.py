@@ -84,9 +84,31 @@ def cmd_run(a):
             print("[settings] free play on: " + set_bytes(nv, mp, int(str(fp["start"]), 0), b"\x01"))
         else:
             print("[settings] free play: no free_play location in the memory map (or no .nv yet)")
+    if not game.nvram_map:                       # a map found since the game file was made
+        from harvester.scriptgen import nvram_map_for
+        game.nvram_map = nvram_map_for(a.rom)
+    found_map = False
+    if game.nvram_map:
+        try:
+            mp0 = os.path.join(os.path.dirname(game.path), game.nvram_map)
+            found_map = bool(json.load(open(mp0)).get("_harvester", {}).get("unverified"))
+        except Exception:
+            pass
+    if found_map and nv_backup is None and os.path.exists(nv):
+        # a map the harvester found itself isn't checked yet: if it writes to the wrong place,
+        # put the game's saved memory back afterwards
+        nv_backup = nv + ".harvester-backup"
+        shutil.copy2(nv, nv_backup)
+        print("[settings] using a memory map the harvester found itself - the game's saved memory "
+              "is backed up and put back after the run")
     pm.start(a.rom)
     for sw, closed in strat.init():
         pm.set_switch(sw, closed)
+    recorder = None
+    if getattr(a, "find_map", False):
+        from harvester.memfind import Recorder
+        recorder = Recorder(pm, a.out, a.rom)
+        print("[map] recording memory snapshots to find this table's memory map")
 
     gstate = None
     if game.nvram_map:
@@ -101,11 +123,17 @@ def cmd_run(a):
                 print(f"[game] the memory map {game.nvram_map} is for {', '.join(roms)}, not {a.rom} - "
                       f"not reading or changing game memory")
             else:
-                gstate = GameState(mp)
+                try:
+                    gstate = GameState(mp)
+                except ValueError as e:
+                    print(f"[game] {e} - not reading or changing game memory")
     lowered = gstate is None or not a.low_scores
     if gstate is not None and "credits" in gstate.fields and not a.free_play:
         strat.zero_credits_chance = 0.3
     sol_prev = {n: False for n in strat.watch_solenoids}
+    last_trigger: dict[int, int] = {}        # coil -> when it last counted
+    coils_ever = False                       # has PinMAME reported any coil at all?
+    game_on_off_seen = False                 # trust the game-on relay only once it has been seen off
     fired: set[int] = set()                  # coils the game used since the last start attempt
     baseline: set[int] = set()               # ... and the ones it uses in attract mode anyway
     all_prev = [False] * 65
@@ -125,22 +153,30 @@ def cmd_run(a):
                 print("Stop requested, saving...")
                 break
             now = pm.now_ms()
-            rises = pm.pop_rises()                   # every coil pulse, however short
-            if pm.sol_events:
-                for n in rises:
-                    fired.add(n)
-                    if n in sol_prev:
-                        strat.on_solenoid(n, now)
-            else:                                    # older libpinmame: poll the coils
-                for n in sol_prev:
-                    on = pm.solenoid_on(n)
-                    if on and not sol_prev[n]:
-                        strat.on_solenoid(n, now)
-                    sol_prev[n] = on
+            # Coils: libpinmame's coil events catch very short pulses (Pistol Poker), but on some
+            # machines (Capcom) they don't cover every coil - so also poll the coils we care about.
+            # A coil counts once per pulse, whichever way it was seen first.
+            rises = pm.pop_rises()
+            coils_ever = coils_ever or bool(rises)
+            hit = set(rises)
+            for n in sol_prev:
+                on = pm.solenoid_on(n)
+                if on and not sol_prev[n]:
+                    hit.add(n)
+                sol_prev[n] = on
+            for n in hit:
+                fired.add(n)
+                if n in sol_prev and now - last_trigger.get(n, -10**9) > 250:
+                    last_trigger[n] = now
+                    strat.on_solenoid(n, now)
             if getattr(strat, "request_zero_credits", False):
                 strat.request_zero_credits = False
                 if gstate is not None and gstate.set_credits(pm, 0):
                     print(f"  {now // 1000:6d}s  [game] credits set to 0")
+            if game.game_on_coil is not None and hasattr(strat, "game_on"):
+                on = pm.solenoid_on(game.game_on_coil)
+                game_on_off_seen = game_on_off_seen or (not on and now > game.boot_s * 1000)
+                strat.game_on = on if game_on_off_seen else None
             if strat.motors:                         # motor-driven toys and wheels
                 strat.coils({n: pm.solenoid_on(n) for n in strat.motors}, now)
             for sw, closed in strat.due(now):
@@ -169,16 +205,33 @@ def cmd_run(a):
                 print(f"  {now // 1000:6d}s  PinMAME stopped by itself"
                       + (f" - it said: {'; '.join(pm.messages[-4:])}" if pm.messages else ""))
                 break
-            if not pm.sol_events and now - last_coil_scan >= 30:   # which coils fire tells us if a game began
+            if now - last_coil_scan >= 30:            # which coils fire tells us if a game began
                 last_coil_scan = now
                 for n in range(1, 65):
                     on = pm.solenoid_on(n)
+                    coils_ever = coils_ever or on
                     if on and not all_prev[n]:
                         fired.add(n)
                     all_prev[n] = on
+            if recorder is not None:
+                recorder.add_events(strat.events)
+                recorder.tick(now, getattr(strat, "phase", ""), getattr(strat, "game_on", None))
+            strat.events.clear()
             for msg in strat.log:
+                game_running_no_ball = (getattr(strat, "game_on", None) and game.trough_solenoid is not None
+                                        and game.trough_solenoid not in fired)
+                if msg.startswith("no ball served") and (not coils_ever or game_running_no_ball) \
+                        and not getattr(strat, "blind", True):
+                    strat.go_blind(now)
+                    print(f"  {now // 1000:6d}s  The game is running, but PinMAME never showed the ball-release coil "
+                          f"({game.trough_solenoid}), so the harvester can't see when a ball comes out. Switching "
+                          "to timed play: balls are served on a timer and a game is counted as 3 balls per player.")
                 if msg.startswith("no ball served"):
                     new_coils = sorted(fired - baseline)
+                    if game.game_on_coil is not None:
+                        gon = pm.solenoid_on(game.game_on_coil)
+                        print(f"  {now // 1000:6d}s  game-on relay (coil {game.game_on_coil}): "
+                              f"{'ON - a game is running' if gon else 'off - no game running'}")
                     print(f"  {now // 1000:6d}s  coils used after Start that attract mode doesn't use: "
                           + (", ".join(map(str, new_coils)) if new_coils else
                              "none - the game probably didn't start (coin or Start not accepted?)"))
@@ -237,6 +290,14 @@ def cmd_run(a):
     except KeyboardInterrupt:
         print("Interrupted, saving...")
     finally:
+        if recorder is not None:
+            if recorder.failed:
+                print("[map] this libpinmame can't hand out the game's memory - no snapshots recorded")
+            else:
+                p = recorder.save()
+                if p:
+                    print(f"[map] {len(recorder.snaps)} memory snapshots saved ({p}). "
+                          f"Find the map with: harvest.py find-map {a.out} --rom {a.rom}")
         pm.stop()
         store.close()
         if nv_backup:
@@ -245,6 +306,36 @@ def cmd_run(a):
             shutil.copy2(nv_backup, nv_backup[:-len(".harvester-backup")])
             print("[settings] game settings restored")
     print(f"Done: {len(store)} unique frames in {a.out}")
+
+
+def cmd_find_map(a):
+    import json
+    import os
+    from harvester import memfind
+    from harvester.scriptgen import nvram_map_for, GAMES
+    runs = memfind.load_runs(a.sources, a.rom)
+    if not runs:
+        sys.exit(f"No memory snapshots for {a.rom} in {', '.join(a.sources)}. Do a Game play run with "
+                 f"'Find this table's memory map' ticked (--find-map) first.")
+    m, rep = memfind.find_map(runs)
+    print(f"Memory map search for {a.rom}:")
+    for line in rep:
+        print("  " + line)
+    real = nvram_map_for(a.rom)
+    real_path = os.path.join(GAMES, real) if real else None
+    if real_path and os.path.exists(real_path) and \
+            not json.load(open(real_path)).get("_harvester", {}).get("unverified"):
+        print("This table already has a checked memory map, so here's how the search compares:")
+        for line in memfind.compare(m, json.load(open(real_path))):
+            print(line)
+        out = os.path.join(a.sources[0], f"{a.rom}.found.map.json")
+    else:
+        out = a.out or os.path.join(GAMES, "nvram_maps", "found", f"{a.rom}.map.json")
+    if not m["game_state"] and not m["high_scores"]:
+        sys.exit("Nothing found yet - do a longer Game play run (several games) and try again.")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    json.dump(m, open(out, "w"), indent=2)
+    print(f"Saved {out}")
 
 
 def cmd_merge(a):
@@ -437,6 +528,8 @@ def main(argv=None):
     r.add_argument("--attract-first", action="store_true",
                    help="watch 2 minutes of attract mode before the first game, and 1-2 minutes "
                         "between games (default: about 15 seconds)")
+    r.add_argument("--find-map", action="store_true",
+                   help="record memory snapshots so find-map can work out this table's memory map")
     r.add_argument("--missing-ball", action="store_true",
                    help="start one ball short, for the BALL MISSING screens")
     r.add_argument("--low-scores", action="store_true",
@@ -466,6 +559,12 @@ def main(argv=None):
     c.add_argument("--crp", default=None)
     c.add_argument("--out", required=True)
     c.set_defaults(fn=cmd_compare)
+
+    fm = sub.add_parser("find-map", help="work out a table's memory map from recorded snapshots")
+    fm.add_argument("sources", nargs="+", help="run folders (out\\<rom>) with memory snapshots")
+    fm.add_argument("--rom", required=True)
+    fm.add_argument("--out", default=None)
+    fm.set_defaults(fn=cmd_find_map)
 
     ls = sub.add_parser("low-scores")
     ls.add_argument("--rom", required=True)

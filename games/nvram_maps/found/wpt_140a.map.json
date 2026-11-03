@@ -1,0 +1,47 @@
+{
+  "_notes": "Found automatically by VPin Frame Harvester from memory snapshots - not checked by a person. Positions are the game's live memory addresses.",
+  "_fileformat": 0.6,
+  "_metadata": {
+    "roms": [
+      "wpt_140a"
+    ],
+    "found_by": "VPin Frame Harvester",
+    "platform": "stern-sam"
+  },
+  "_harvester": {
+    "live_addresses": true,
+    "unverified": true
+  },
+  "game_state": {
+    "current_ball": {
+      "label": "Ball",
+      "start": "0x33d0d",
+      "encoding": "int"
+    },
+    "current_player": {
+      "label": "Player",
+      "start": "0x33d0c",
+      "encoding": "int"
+    },
+    "player_count": {
+      "label": "Player Count",
+      "start": "0x2110900",
+      "encoding": "int"
+    },
+    "credits": {
+      "label": "Credits",
+      "start": "0x211100c",
+      "encoding": "int"
+    },
+    "scores": [
+      {
+        "label": "Player 1",
+        "start": "0x2110a2c",
+        "length": 4,
+        "encoding": "int",
+        "endian": "little"
+      }
+    ]
+  },
+  "high_scores": []
+}

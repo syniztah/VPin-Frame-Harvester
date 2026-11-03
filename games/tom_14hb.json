@@ -1,0 +1,78 @@
+{
+  "_comment": "Made automatically from the table script (Theatre of Magic (Bally 1995) 2.4) by harvester/scriptgen.py. Check the report; edit freely.",
+  "_generated": true,
+  "name": "Theatre of Magic (Bally 1995) 2.4",
+  "roms": [
+    "tom_14hb"
+  ],
+  "trough": [
+    32,
+    33,
+    34,
+    35
+  ],
+  "trough_solenoid": 1,
+  "holes": [
+    {
+      "switch": 44,
+      "coil": 4
+    }
+  ],
+  "coin": 1,
+  "start": 13,
+  "tilt": 14,
+  "slam_tilt": 21,
+  "flippers": [
+    112,
+    114
+  ],
+  "service_buttons": [
+    5,
+    6,
+    7,
+    8
+  ],
+  "game_on_coil": 31,
+  "coins_per_credit": 2,
+  "playfield": [
+    31,
+    36,
+    37,
+    38,
+    41,
+    42,
+    43,
+    47,
+    51,
+    61,
+    62,
+    63,
+    64,
+    65,
+    82,
+    83,
+    84
+  ],
+  "spinners": [
+    37
+  ],
+  "always_closed": [
+    22,
+    24,
+    52,
+    55,
+    57,
+    58
+  ],
+  "nvram_map": "nvram_maps/all/williams/wpc/tom_13.map.json",
+  "levels": 0,
+  "pulse_ms": 60,
+  "ball_time_s": [
+    20,
+    90
+  ],
+  "single_player_chance": 0.7,
+  "drain": [],
+  "boot_s": 12,
+  "serve_timeout_s": 30
+}

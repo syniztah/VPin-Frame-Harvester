@@ -497,7 +497,92 @@ def test_one_switch_trough_holds_several_balls():
     assert closed.get(18) is False and s.in_play == 3   # ...until the last ball leaves
 
 
+# ---- memory-map finder on a simulated machine with known positions
+import random as _random
+import numpy as _np
+from harvester import memfind
+
+def _mfbcd(n, L):
+    s = f"{n:0{L*2}d}"[-L*2:]
+    return [int(s[k]) << 4 | int(s[k+1]) for k in range(0, L*2, 2)]
+
+class _FakeMachine:
+    BALL, PLAYER, PCOUNT, CRED, SCORE, HS, AUD = 0x25E, 0x25D, 0x25F, 0x1546, 0x154C, 0x1490, 0x1800
+    def __init__(self, rng):
+        self.rng = rng
+        self.m = _np.array([rng.randrange(256) for _ in range(8192)], dtype=_np.uint8)
+        self.m[0x200:0x300] = 0
+        self.m[self.BALL] = 0; self.m[self.PLAYER] = 0; self.m[self.PCOUNT] = 0
+        self.credits = 0; self.coins = 0; self.scores = [0]*4
+        for i, v in enumerate([2400000000, 2100000000, 1950000000, 1800000000, 1650000000]):
+            self.m[self.HS + i*5: self.HS + i*5 + 5] = _mfbcd(v, 5)
+        self.cpc = 2
+        self.write()
+    def write(self):
+        self.m[self.CRED] = _mfbcd(min(self.credits, 99), 1)[0]
+        self.m[self.AUD] = self.coins % 256
+        for p in range(4):
+            self.m[self.SCORE + p*5: self.SCORE + p*5 + 5] = _mfbcd(self.scores[p], 5)
+        for k in range(6):                       # noisy bytes: timers etc
+            self.m[0x100 + k] = self.rng.randrange(256)
+    def read_nvram(self): return self.m.tobytes()
+    def cpu_region(self, start=0, size=None):
+        mem = bytes(0x4000) + self.m.tobytes()
+        return mem[start:] if size is None else mem[start:start + size]
+
+def _mf_run(out, seed=1, games=6, mix=True):
+    rng = _random.Random(seed)
+    M = _FakeMachine(rng)
+    rec = memfind.Recorder(M, out, 'fake')
+    t = 0
+    def tick(phase, game_on, dt=500):
+        nonlocal t
+        for _ in range(max(1, dt // 500)):
+            t += 500; M.write(); rec.tick(t, phase, game_on)
+    for _ in range(10): tick("boot", False)
+    for g in range(games):
+        players = rng.choice([1, 2, 3]) if mix else 1
+        rec.add_events([(t + 100, "before_coins", {})]); tick("start", False)
+        n = players * M.cpc + rng.randint(0, 3)
+        for i in range(n):
+            M.coins += 1
+            if M.coins % M.cpc == 0: M.credits += 1
+            rec.add_events([(t + 100, "coin", {"n": i+1, "of": n})]); tick("start", False)
+        M.credits -= players
+        M.scores = [0]*4
+        M.m[M.PCOUNT] = players; M.m[M.PLAYER] = 1; M.m[M.BALL] = 1
+        rec.add_events([(t + 100, "started", {"players": players})]); tick("await", True)
+        for ball in range(1, 4):
+            for p in range(1, players + 1):
+                M.m[M.BALL] = ball; M.m[M.PLAYER] = p
+                for save in range(2 if rng.random() < 0.2 else 1):
+                    rec.add_events([(t + 100, "serve", {})]); tick("play", True)
+                    for _ in range(rng.randint(3, 8)):
+                        M.scores[p-1] += rng.choice([10, 100, 1000, 25000]); tick("play", True, 2000)
+                    rec.add_events([(t + 100, "drain", {})]); tick("await", True)
+        M.m[M.PLAYER] = 0
+        for _ in range(10): tick("start", False)
+    return rec.save()
+
+
+
+def test_memfind_on_simulated_machine():
+    out = tempfile.mkdtemp()
+    p = _mf_run(out, seed=2, games=5, mix=True)
+    m, rep = memfind.find_map(memfind.load_runs([p]))
+    gs = m["game_state"]
+    # the fake machine keeps its .nv memory at 0x4000 in CPU memory: the map uses live addresses
+    assert gs["current_ball"]["start"] == "0x425e", rep
+    assert gs["current_player"]["start"] == "0x425d", rep
+    assert gs["player_count"]["start"] == "0x425f", rep
+    assert gs["credits"]["start"] == "0x5546", rep
+    assert gs["scores"][0]["start"] == "0x554c", rep
+    assert m["high_scores"][0]["score"]["start"] == "0x5490" and len(m["high_scores"]) == 5, rep
+    assert m["_harvester"]["live_addresses"] is True
+
+
 if __name__ == "__main__":
+    test_memfind_on_simulated_machine()
     test_one_switch_trough_holds_several_balls()
     test_scriptgen_kicker_trough_and_ballstack_outhole()
     tmp = tempfile.mkdtemp()

@@ -49,6 +49,8 @@ class GameMap:
     slam_tilt: int | None = None         # ends a game that runs too long
     max_game_s: int = 600                # longer than this -> slam tilt (game over, attract, initials...)
     service_buttons: list[int] = field(default_factory=list)  # Sega: [0, -1, -2]; WPC: [5, 6, 7, 8]
+    balls_per_game: int = 3              # only used when PinMAME can't report the coils (timed play)
+    game_on_coil: int | None = None      # the "game on" relay: on while a game is being played
     cabinet_pulse_ms: int = 0            # coin/Start press length; 0 = 120/150 ms (some boards scan slowly)
     attract_first_s: int = 15            # watch attract mode this long before the first game
     attract_between_s: tuple[int, int] = (10, 30)  # idle after each game over (game over, match screens)
@@ -111,6 +113,7 @@ class Strategy:
         self._q: list[tuple[int, int, int, bool]] = []
         self._seq = 0
         self.log: list[str] = []          # messages for the console
+        self.events: list[tuple[int, str, dict]] = []   # (when, what, details) for the memory-map finder
         self.game_state: dict = {}        # filled by the run loop from game memory, if a map exists
         self._wheel: dict = {}
         self._mech: dict = {}
@@ -273,6 +276,14 @@ class FuzzStrategy(Strategy):
         self.games = 0
         self.served_since_start = True
         self.failed_starts = 0                # starts that never got a ball out -> more coins next time
+        self.extra_coins = 0                  # extra coins (per player) used on the last start attempt
+        self.learned_extra = 0                # ... and what a start that worked needed: keep using it
+        self.game_on: bool | None = None      # from the game-on relay, when it's known to work
+        self.blind = False                    # PinMAME reports none of this machine's coils: play on timers
+        self.blind_balls_left = 0             # ... and count balls to know when the game is over
+        self._blind_q: list[tuple[int, int]] = []
+        self.stuck_games = 0
+        self.serves_in_game = 0               # balls served since Start (more than one per ball with saves)
         self.game_started_ms = None
         self.players = 1
         self._last_pos, self._pos_since = None, None
@@ -347,6 +358,13 @@ class FuzzStrategy(Strategy):
                     self.drop_down.discard(sw)
             self.log.append("drop targets reset")
 
+    def go_blind(self, now_ms: int):
+        """Coils can't be seen: the game that just 'failed' is really waiting for its first ball."""
+        self.blind = True
+        self.blind_balls_left = self.g.balls_per_game * max(1, self.players)
+        self.phase = "await"
+        self._serve(now_ms + 1000)
+
     def _release_hole(self, sw: int, now_ms: int, why: str = "coil"):
         if sw not in self.held:
             return
@@ -366,6 +384,8 @@ class FuzzStrategy(Strategy):
         if sw in self.hole_coil:
             if sw not in self.held and self.in_play > 0:
                 self.held.add(sw)
+                if self.blind:                       # no coil to wait for: kick it out after a moment
+                    self._blind_q.append((t + self.rng.randint(1500, 4000), sw))
                 self.in_play -= 1
                 self.at(t, sw, True)
                 self.log.append(f"ball into hole {sw} ({self.in_play} in play)")
@@ -386,6 +406,10 @@ class FuzzStrategy(Strategy):
     def _serve(self, t: int):
         g = self.g
         self.served_since_start = True
+        self.serves_in_game += 1
+        self.events.append((t + 300, "serve", {"in_play": self.in_play}))
+        if self.failed_starts:
+            self.learned_extra = max(self.learned_extra, self.extra_coins)
         self.failed_starts = 0
         if g.serve_pulse is not None:            # tell the game the ball really left
             self.pulse(t + 20, g.serve_pulse, 100)
@@ -409,7 +433,7 @@ class FuzzStrategy(Strategy):
             self.next_action_ms = t + 3200
             lo, hi = g.ball_time_s
             self.clean = False
-            if self.rng.random() < g.clean_drain_chance:  # touch nothing, drain: ball save screens
+            if self.rng.random() < g.clean_drain_chance and not self.blind:   # (timed play can't see ball saves)  # touch nothing, drain: ball save screens
                 self.ball_end_ms = t + 3000 + self.rng.randint(1, 5) * 1000
                 self.clean = True
                 # Which switches a "touch nothing" ball crosses differs per table, so
@@ -429,6 +453,11 @@ class FuzzStrategy(Strategy):
                 self.log.append("will nudge this ball (tilt warning)")
 
     def plan(self, now_ms: int):
+        if self._blind_q:
+            due = [x for x in self._blind_q if x[0] <= now_ms]
+            self._blind_q = [x for x in self._blind_q if x[0] > now_ms]
+            for _, sw in due:
+                self._release_hole(sw, now_ms, why="timer")
         if now_ms < self.next_action_ms:
             return
         g, t = self.g, now_ms
@@ -452,13 +481,37 @@ class FuzzStrategy(Strategy):
                 self.log.append(f"recovered {stray} stray ball(s) into the trough before the next game")
                 self.next_action_ms = t + 3000
                 return
+            if self.game_on and self.blind:
+                # timed play miscounted (ball save, extra ball): the game still wants a ball
+                self.blind_balls_left = 1
+                self.log.append("timed play: the game is still on - serving another ball")
+                self._serve(t + 1000)
+                return
+            if self.game_state.get("game_over") is False and not self.blind:
+                self.game_on = True          # the game's memory says a game is running: same as the relay
+            if self.game_on:
+                # The game is still running but no ball came out. Coins and Start now would only
+                # add players, so wait - and end the game if it stays stuck.
+                self.stuck_games += 1
+                if self.stuck_games >= 2 and g.slam_tilt is not None:
+                    self.pulse(t, g.slam_tilt, 150)
+                    self.log.append("the game is stuck without a ball - slam tilt to end it")
+                    self.stuck_games = 0
+                else:
+                    self.log.append("the game is still running (game-on relay) but no ball came out - "
+                                    "not pressing Start (that would add players)")
+                self.next_action_ms = t + 20000
+                return
+            self.stuck_games = 0
             players = 1 if self.rng.random() < g.single_player_chance else self.rng.choice([2, 2, 2, 3, 4])
             if self.fixed_players:
                 players = self.fixed_players
             self.players = players
             coins = (players * g.coins_per_credit + self.rng.randint(0, 3)) if g.coin is not None else 0
-            if coins and self.failed_starts:         # last start didn't take: maybe 2+ coins per credit
-                coins += min(6, 2 * self.failed_starts) * players
+            # A start that didn't take probably needed more coins (2+ coins per credit, or a game that
+            # costs several credits, like World Poker Tour). Once a start works, keep that amount.
+            self.extra_coins = max(self.learned_extra, min(8, 3 * self.failed_starts)) if coins else 0
+            coins += self.extra_coins * players
             if self.zero_credits_chance and g.coin is not None and self.rng.random() < self.zero_credits_chance:
                 # empty the credits first (the run loop writes 0 into game memory), then one coin
                 # alone: the "CREDITS 1/2" / half-credit screens only show from zero
@@ -469,21 +522,27 @@ class FuzzStrategy(Strategy):
             if g.coin is not None and self.rng.random() < 0.25:
                 coins += self.rng.randint(10, 30)       # double-digit credit screens
             gap = max(400, (g.cabinet_pulse_ms or 120) + 300)   # the switch must open between coins
+            self.events.append((t - 300, "before_coins", {}))
             for i in range(coins):
                 self.pulse(t + i * gap, g.coin, g.cabinet_pulse_ms or 120)
+                self.events.append((t + i * gap + gap - 50, "coin", {"n": i + 1, "of": coins}))
             t2 = t + coins * gap + 800
             for i in range(players):
-                self.pulse(t2 + i * 1500, g.start, g.cabinet_pulse_ms or 150)   # slow enough for every board to add a player
+                # well apart: some boards (Data East) ignore Start for a moment after a game begins
+                self.pulse(t2 + i * 3000, g.start, g.cabinet_pulse_ms or 150)
             self.games += 1
             self.game_started_ms = t2
+            self.serves_in_game = 0
             self.served_since_start = False
+            self.events.append((t2 + 500, "started", {"players": players}))   # credits are taken at the first press
             self.log.append(f"start attempt {self.games}: {coins} coins, {players} player(s)")
             self.phase = "await"
-            self.await_started = t2 + players * 1500 + 60000   # no initials right after start
-            self.await_until = t2 + players * 1500 + g.serve_timeout_s * 1000
-            self.next_action_ms = t2 + players * 1500 + 1000
-            if not self.watch_solenoids:          # no coil info: serve on a timer
-                self._serve(t2 + players * 1500 + 3000)
+            self.await_started = t2 + players * 3000 + 60000   # no initials right after start
+            self.await_until = t2 + players * 3000 + g.serve_timeout_s * 1000
+            self.next_action_ms = t2 + players * 3000 + 1000
+            if not self.watch_solenoids or self.blind:   # no coil info: serve on a timer
+                self.blind_balls_left = g.balls_per_game * players
+                self._serve(t2 + players * 3000 + 3000)
 
         elif self.phase == "await":
             # Between balls / after the game: bonus count, match, initials entry,
@@ -572,6 +631,7 @@ class FuzzStrategy(Strategy):
                 else:
                     self._trough_add(t + 500)
                 self.in_play = max(0, self.in_play - 1)
+                self.events.append((t + 200, "drain", {"in_play": self.in_play}))
                 self.log.append(f"ball drained ({self.in_play} still in play)")
                 if self.in_play > 0:              # multiball: keep playing
                     self.ball_end_ms = t + self.rng.randint(5, 20) * 1000
@@ -584,7 +644,20 @@ class FuzzStrategy(Strategy):
                     if self.game_state.get("current_ball") is not None and not self._mid_game():
                         # last ball of the game: allow time for bonus, initials, match
                         self.await_until = t + 150_000
+                    elif not self.game_state and self.serves_in_game < 3 * max(1, self.players):
+                        # can't read the game: fewer balls than a 3-ball game has gone by, so more
+                        # are surely coming - allow for long end-of-ball bonuses (World Poker Tour)
+                        self.await_until = t + max(g.serve_timeout_s, 90) * 1000
                     self.next_action_ms = t + 2500
+                    if self.blind:
+                        if g.outhole and self.outhole_n:
+                            self.on_solenoid(g.outhole["coil"], t + 1200)   # as if the game kicked it
+                        self.blind_balls_left -= 1
+                        if self.blind_balls_left > 0:
+                            self._serve(t + self.rng.randint(4000, 9000))
+                        else:
+                            self.await_until = t + 40_000        # bonus, match, game over screens
+                            self.log.append("timed play: that was the last ball of the game")
                 return
             if g.recipes and self.rng.random() < sum(r.get("chance", 0.03) for r in g.recipes):
                 r = self.rng.choices(g.recipes, weights=[x.get("chance", 0.03) for x in g.recipes])[0]

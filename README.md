@@ -56,6 +56,18 @@ writes one `frames.txt` ready for ColorizingDMD.
 Already have a finished Serum project for the table? Compare shows how much the
 harvester reached and pictures of the screens it missed.
 
+**Memory maps (optional extra)**
+For many ROMs the harvester knows where the game keeps its player, ball,
+credits and high scores ([pinball-memory-maps](https://github.com/tomlogic/pinball-memory-maps)).
+That lets it lower the high scores so games end in ENTER INITIALS. For a ROM
+without one, tick **Find this table's memory map** and do a few Game play runs
+(Players on *Mix* helps): the harvester watches the game's memory while it plays
+and works the map out itself. Found maps are saved in `games/nvram_maps/found`
+and marked as unchecked, and while one is in use your table's saved memory
+(.nv) is backed up and put back after every run. Checked against real maps so far:
+Sega/Stern Whitestar and Stern SAM (everything found), Data East (ball and
+credits; the player number needs real multi-player games).
+
 ## Supported systems
 
 | System | Tested with |

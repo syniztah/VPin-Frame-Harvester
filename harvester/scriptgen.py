@@ -25,36 +25,36 @@ import struct
 
 # Cabinet switches per system script, from VPX's own scripts folder.
 SYSTEMS = {
-    "sega":    dict(start=54, coin=5, tilt=56, slam_tilt=55, flippers=[82, 84], service_buttons=[0, -1, -2],
+    "sega":    dict(game_on_coil=15, start=54, coin=5, tilt=56, slam_tilt=55, flippers=[82, 84], service_buttons=[0, -1, -2],
                     label="Sega / Stern Whitestar"),
-    "sega2":   dict(start=3, coin=5, tilt=1, slam_tilt=8, flippers=[64, 63], service_buttons=[0, -1, -2],
+    "sega2":   dict(game_on_coil=48, start=3, coin=5, tilt=1, slam_tilt=8, flippers=[64, 63], service_buttons=[0, -1, -2],
                     label="Sega 1990s"),
-    "de":      dict(start=3, coin=4, tilt=1, slam_tilt=7, flippers=[82, 84], service_buttons=[-7, -6],
+    "de":      dict(game_on_coil=23, start=3, coin=4, tilt=1, slam_tilt=7, flippers=[82, 84], service_buttons=[-7, -6],
                     label="Data East"),
-    "de2":     dict(start=3, coin=4, tilt=1, slam_tilt=7, flippers=[82, 84], service_buttons=[-7, -6],
+    "de2":     dict(game_on_coil=23, start=3, coin=4, tilt=1, slam_tilt=7, flippers=[82, 84], service_buttons=[-7, -6],
                     label="Data East"),
-    "wpc":     dict(start=13, coin=1, tilt=14, slam_tilt=21, flippers=[112, 114], service_buttons=[5, 6, 7, 8],
+    "wpc":     dict(game_on_coil=31, start=13, coin=1, tilt=14, slam_tilt=21, flippers=[112, 114], service_buttons=[5, 6, 7, 8],
                     label="Williams/Bally WPC"),
-    "s11":     dict(start=3, coin=6, tilt=1, slam_tilt=7, flippers=[82, 84], service_buttons=[-7, -6],
+    "s11":     dict(game_on_coil=23, start=3, coin=6, tilt=1, slam_tilt=7, flippers=[82, 84], service_buttons=[-7, -6],
                     label="Williams System 11"),
-    "s7":      dict(start=3, coin=6, tilt=1, slam_tilt=7, flippers=[82, 84], service_buttons=[-7, -6],
+    "s7":      dict(game_on_coil=25, start=3, coin=6, tilt=1, slam_tilt=7, flippers=[82, 84], service_buttons=[-7, -6],
                     label="Williams System 7"),
-    "gts3":    dict(start=4, coin=0, tilt=-7, slam_tilt=-6, flippers=[141, 143], service_buttons=[-8],
+    "gts3":    dict(game_on_coil=32, start=4, coin=0, tilt=-7, slam_tilt=-6, flippers=[141, 143], service_buttons=[-8],
                     label="Gottlieb System 3"),
     "sys80":   dict(start=47, coin=17, tilt=57, slam_tilt=-1, flippers=[112, 114], service_buttons=[7],
                     label="Gottlieb System 80"),
-    "sam":     dict(start=16, coin=65, tilt=-7, slam_tilt=-6, flippers=[82, 84], service_buttons=[-3, -2, -1, 0],
+    "sam":     dict(game_on_coil=33, start=16, coin=65, tilt=-7, slam_tilt=None, flippers=[82, 84], service_buttons=[-3, -2, -1, 0],
                     label="Stern SAM"),
-    "capcom":  dict(start=7, coin=1, tilt=10, slam_tilt=9, flippers=[82, 84], service_buttons=[8],
+    "capcom":  dict(game_on_coil=51, start=7, coin=1, tilt=10, slam_tilt=9, flippers=[82, 84], service_buttons=[8],
                     label="Capcom"),
-    "stern":   dict(start=6, coin=1, tilt=7, slam_tilt=8, flippers=[82, 84], service_buttons=[-7],
+    "stern":   dict(game_on_coil=19, start=6, coin=1, tilt=7, slam_tilt=8, flippers=[82, 84], service_buttons=[-7],
                     label="Stern (1980s)"),
-    "bally":   dict(start=6, coin=11, tilt=7, slam_tilt=16, flippers=[82, 84], service_buttons=[-7],
+    "bally":   dict(game_on_coil=19, start=6, coin=11, tilt=7, slam_tilt=16, flippers=[82, 84], service_buttons=[-7],
                     label="Bally (1970s-80s)"),
-    "alving":  dict(start=9, coin=1, slam_tilt=5, flippers=[114, 116], service_buttons=[-7, -6],
+    "alving":  dict(game_on_coil=27, start=9, coin=1, slam_tilt=5, flippers=[114, 116], service_buttons=[-7, -6],
                     cabinet_pulse_ms=400, label="Alvin G."),
 }
-CPC = {"wpc": 2, "sega": 2, "sega2": 2, "de": 2, "de2": 2, "s11": 2, "sam": 2, "alving": 2}   # coins per credit (usual default)
+CPC = {"capcom": 2, "wpc": 2, "sega": 2, "sega2": 2, "de": 2, "de2": 2, "s11": 2, "sam": 2, "alving": 2}   # coins per credit (usual default)
 
 from .paths import BASE
 GAMES = os.path.join(BASE, "games")
@@ -422,7 +422,11 @@ def make_game(script: str, rom: str | None = None, table: str = "") -> tuple[dic
     else:
         cab.pop("label", None)
         rep.insert(0, "! Machine type not recognised - start, coin and flipper switches need filling in.")
-    for k in ("coin", "start", "tilt", "slam_tilt", "flippers", "service_buttons", "cabinet_pulse_ms"):
+    for c, txt in sol.items():                        # SolCallback(27) = "vpmNudge.SolGameOn"
+        if "solgameon" in txt.lower():
+            cab["game_on_coil"] = c
+    for k in ("coin", "start", "tilt", "slam_tilt", "flippers", "service_buttons", "cabinet_pulse_ms",
+              "game_on_coil"):
         if k in cab:
             g[k] = cab[k]
     g["coins_per_credit"] = CPC.get(sysname or "", 1)
@@ -607,6 +611,8 @@ def nvram_map_for(rom: str | None) -> str | None:
         p = json.load(open(idx)).get(rom)
         if p:
             return "nvram_maps/" + p
+    if os.path.exists(os.path.join(GAMES, "nvram_maps", "found", f"{rom}.map.json")):
+        return f"nvram_maps/found/{rom}.map.json"   # found by the harvester itself
     return None
 
 

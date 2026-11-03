@@ -1,0 +1,128 @@
+{
+  "_comment": "Pinball Magic (Capcom 1995). Made from the table script (LW_burger's VPX), then by hand: the stage elevator (motor coil 18, switches 58 down / 59 up) and the magic wand (motor coil 17, switches 67 / 68) move like the table script moves them, so the game's toy checks pass.",
+  "name": "Pinball Magic (Capcom 1995)",
+  "roms": [
+    "pmv112",
+    "pmv112r"
+  ],
+  "trough": [
+    76,
+    75,
+    74
+  ],
+  "trough_solenoid": 6,
+  "outhole": {
+    "switch": 73,
+    "coil": 7
+  },
+  "holes": [
+    {
+      "switch": 57,
+      "coil": 18
+    }
+  ],
+  "coin": 1,
+  "start": 7,
+  "tilt": 10,
+  "slam_tilt": 9,
+  "flippers": [
+    82,
+    84
+  ],
+  "service_buttons": [
+    8
+  ],
+  "coins_per_credit": 2,
+  "playfield": [
+    17,
+    18,
+    19,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    49,
+    51,
+    52,
+    60,
+    65,
+    66,
+    69,
+    70,
+    71,
+    72
+  ],
+  "spinners": [
+    66
+  ],
+  "levels": 0,
+  "pulse_ms": 60,
+  "ball_time_s": [
+    20,
+    90
+  ],
+  "single_player_chance": 0.7,
+  "drain": [],
+  "boot_s": 12,
+  "serve_timeout_s": 30,
+  "mechs": [
+    {
+      "name": "stage elevator",
+      "kind": "oscillate",
+      "motor": 18,
+      "min": 116,
+      "max": 300,
+      "start": 300,
+      "speed": 120,
+      "switches": [
+        {
+          "switch": 58,
+          "max": 298
+        },
+        {
+          "switch": 59,
+          "min": 125
+        }
+      ]
+    },
+    {
+      "name": "magic wand",
+      "kind": "oscillate",
+      "motor": 17,
+      "min": -22,
+      "max": 42,
+      "start": 42,
+      "speed": 12,
+      "switches": [
+        {
+          "switch": 67,
+          "min": 38
+        },
+        {
+          "switch": 68,
+          "max": -18
+        }
+      ]
+    }
+  ],
+  "game_on_coil": 51
+}

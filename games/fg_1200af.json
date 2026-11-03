@@ -28,7 +28,7 @@
       "switches": [
         9
       ],
-      "reset_coil": null
+      "reset_coil": 6
     },
     {
       "switches": [
@@ -37,13 +37,13 @@
         45,
         46
       ],
-      "reset_coil": null
+      "reset_coil": 3
     }
   ],
   "coin": 65,
   "start": 16,
   "tilt": -7,
-  "slam_tilt": -6,
+  "slam_tilt": null,
   "flippers": [
     82,
     84
@@ -54,7 +54,9 @@
     -1,
     0
   ],
+  "game_on_coil": 33,
   "coins_per_credit": 2,
+  "shooter_lane": 23,
   "playfield": [
     3,
     4,
@@ -63,7 +65,6 @@
     7,
     8,
     10,
-    23,
     24,
     25,
     26,

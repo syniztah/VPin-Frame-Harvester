@@ -1,0 +1,134 @@
+{
+  "_comment": "Made automatically from the table script (World Poker Tour (Stern 2006)_Bigus(MOD)4.1) by harvester/scriptgen.py. Check the report; edit freely.",
+  "_generated": true,
+  "name": "World Poker Tour (Stern 2006)_Bigus(MOD)4.1",
+  "roms": [
+    "wpt_140a"
+  ],
+  "trough": [
+    21,
+    20,
+    19,
+    18
+  ],
+  "trough_solenoid": 1,
+  "serve_pulse": 22,
+  "holes": [
+    {
+      "switch": 3,
+      "coil": 3
+    },
+    {
+      "switch": 55,
+      "coil": 4
+    },
+    {
+      "switch": 49,
+      "coil": 21
+    }
+  ],
+  "drop_banks": [
+    {
+      "switches": [
+        33,
+        34,
+        35,
+        36
+      ],
+      "reset_coil": 5
+    },
+    {
+      "switches": [
+        37,
+        38,
+        39,
+        40
+      ],
+      "reset_coil": 6
+    },
+    {
+      "switches": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "reset_coil": 8
+    },
+    {
+      "switches": [
+        10,
+        11,
+        12,
+        13
+      ],
+      "reset_coil": 7
+    }
+  ],
+  "coin": 65,
+  "start": 16,
+  "tilt": -7,
+  "slam_tilt": null,
+  "flippers": [
+    82,
+    84
+  ],
+  "service_buttons": [
+    -3,
+    -2,
+    -1,
+    0
+  ],
+  "game_on_coil": 33,
+  "coins_per_credit": 2,
+  "shooter_lane": 23,
+  "playfield": [
+    8,
+    9,
+    14,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    50,
+    51,
+    52,
+    53,
+    54,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62
+  ],
+  "spinners": [
+    8,
+    43
+  ],
+  "nvram_map": "nvram_maps/found/wpt_140a.map.json",
+  "levels": 0,
+  "pulse_ms": 60,
+  "ball_time_s": [
+    20,
+    90
+  ],
+  "single_player_chance": 0.7,
+  "drain": [],
+  "boot_s": 12,
+  "serve_timeout_s": 30
+}

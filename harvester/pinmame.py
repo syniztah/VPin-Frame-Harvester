@@ -43,6 +43,10 @@ _IS_WIN32_X86 = sys.platform == "win32" and struct.calcsize("P") == 4
 _FUNCTYPE = C.WINFUNCTYPE if _IS_WIN32_X86 else C.CFUNCTYPE
 
 
+class NVRAMState(C.Structure):
+    _fields_ = [("nvramNo", C.c_int), ("oldStat", C.c_uint8), ("currStat", C.c_uint8)]
+
+
 class SolenoidState(C.Structure):
     _fields_ = [("solNo", C.c_int), ("state", C.c_int)]
 
@@ -298,6 +302,47 @@ class PinMame:
         buf = (C.c_uint8 * size)()
         got = self.lib.PinmameReadMainCPUMemory(address, buf, size)
         return bytes(buf[:got]) if got == size else None
+
+    def read_nvram(self) -> bytes | None:
+        """The game's battery-backed memory, exactly as PinMAME would save it to the .nv file
+        (memory maps describe positions in this). None if this libpinmame can't do it."""
+        if self.lib.PinmameIsRunning() != 1:
+            return None
+        try:
+            if not hasattr(self, "_nv_buf"):
+                f = self.lib.PinmameGetMaxNVRAM
+                f.restype = C.c_int
+                n = f()
+                if n <= 0:
+                    return None
+                self._nv_buf = (NVRAMState * n)()
+                self.lib.PinmameGetNVRAM.argtypes = [C.POINTER(NVRAMState)]
+                self.lib.PinmameGetNVRAM.restype = C.c_int
+            got = self.lib.PinmameGetNVRAM(self._nv_buf)
+            if got <= 0:
+                return None
+            import numpy as np
+            arr = np.frombuffer(self._nv_buf, dtype=np.uint8).reshape(-1, C.sizeof(NVRAMState))
+            return arr[:got, C.sizeof(C.c_int) + 1].tobytes()   # currStat of each entry
+        except (AttributeError, OSError):
+            return None
+
+    def cpu_region(self, start: int = 0, size: int | None = None) -> bytes | None:
+        """Part of the main CPU's memory region (to line .nv positions up with live memory).
+        Whole region if size is None, but only when it's small (SAM's is 80 MB)."""
+        if self.lib.PinmameIsRunning() != 1:
+            return None
+        base = self.lib.PinmameGetRawMemoryRegion(0x81)
+        length = self.lib.PinmameGetRawMemoryRegionLength(0x81)
+        if not base or not length:
+            return None
+        if size is None:
+            if length > 4 * 1024 * 1024:
+                return None
+            size = length - start
+        if start < 0 or start + size > length:
+            return None
+        return C.string_at(base + start, size)
 
     def write_memory(self, address: int, data: bytes) -> bool:
         """Write into the main CPU's RAM while the game runs (used to lower

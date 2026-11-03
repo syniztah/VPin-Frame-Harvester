@@ -11,13 +11,13 @@ def _num(v) -> int:
     return int(v, 16) if isinstance(v, str) else int(v)
 
 
-def _decode(raw: bytes, enc: str) -> int:
+def _decode(raw: bytes, enc: str, endian: str = "big") -> int:
     if enc == "bcd":
         n = 0
         for b in raw:
             n = n * 100 + (b >> 4) * 10 + (b & 15)
         return n
-    return int.from_bytes(raw, "big")
+    return int.from_bytes(raw, "little" if endian == "little" else "big")
 
 
 def addrs(d: dict) -> list[int]:
@@ -53,15 +53,51 @@ def _write(pm, d: dict, data: bytes) -> bool:
     return all(pm.write_memory(x, data[i:i + 1]) for i, x in enumerate(a))
 
 
+def _shift(m, off: int):
+    """A copy of a map with every position moved by off."""
+    if isinstance(m, dict):
+        out = {}
+        for k, v in m.items():
+            if k == "start":
+                out[k] = _num(v) + off
+            elif k == "offsets":
+                out[k] = [_num(x) + off for x in v]
+            elif k == "_metadata":
+                out[k] = v
+            else:
+                out[k] = _shift(v, off)
+        return out
+    if isinstance(m, list):
+        return [_shift(x, off) for x in m]
+    return m
+
+
 class GameState:
     FIELDS = ("current_player", "current_ball", "player_count", "ball_count", "credits")
 
     def __init__(self, map_path: str):
         m = json.load(open(map_path))
+        h = m.get("_harvester", {})
+        if h and h.get("experimental"):
+            raise ValueError("this memory map was found on a machine type where finding maps is still "
+                             "experimental (Stern SAM), so it isn't used")
+        if h and h.get("live_addresses") is not True:
+            raise ValueError("this found memory map is from an older version (or has no live addresses) - "
+                             "find it again")
+        off = int(h.get("cpu_offset") or 0)        # (older found maps: .nv positions + offset)
+        if off:
+            m = _shift(m, off)
         gs = m.get("game_state", {})
         self.fields = {k: gs[k] for k in self.FIELDS if k in gs and _has(gs[k])}
         self.scores = [s for s in gs.get("scores", []) if _has(s)]
         self.table = [h for h in m.get("high_scores", []) if _has(h.get("score", {}))]
+        # Telling a running game from game over: SAM maps say it directly (any non-zero = game
+        # over); elsewhere player 0 / 0 players means no game. A SAM map without that field
+        # (one the harvester found) can't tell, so says nothing.
+        self.sam = "sam" in str(m.get("_metadata", {}).get("platform") or "")
+        self.game_over_field = gs.get("game_over") if self.sam and _has(gs.get("game_over")) else None
+        self.knows_game_over = self.game_over_field is not None or (
+            not self.sam and ("current_player" in self.fields or "player_count" in self.fields))
         self._sums = m.get("_metadata", {}).get("validation", {}).get("checksum", [])
 
     def has_checksum_over_scores(self) -> bool:
@@ -125,14 +161,19 @@ class GameState:
         for k, d in self.fields.items():
             raw = _read(pm, d)
             if raw is not None:
-                out[k] = _decode(raw, d.get("encoding", "int"))
+                out[k] = _decode(raw, d.get("encoding", "int"), d.get("endian", "big"))
         sc = []
         for s in self.scores:
             raw = _read(pm, s)
             if raw is not None:
-                sc.append(_decode(raw, s.get("encoding", "bcd")))
+                sc.append(_decode(raw, s.get("encoding", "bcd"), s.get("endian", "big")))
         out["scores"] = sc
-        out["game_over"] = out.get("current_player", 1) == 0
+        if self.game_over_field is not None:
+            raw = _read(pm, self.game_over_field)
+            if raw is not None:
+                out["game_over"] = any(raw)
+        elif self.knows_game_over:
+            out["game_over"] = out.get("current_player", 1) == 0 or out.get("player_count", 1) == 0
         return out
 
     @staticmethod

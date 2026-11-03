@@ -32,8 +32,8 @@ HARVEST_EXE = os.path.join(HERE, "harvest.exe")    # packaged app: the command-l
 ASSETS = os.path.join(getattr(sys, "_MEIPASS", HERE), "assets")
 ICON_PNG = os.path.join(ASSETS, "icon.png")
 
-VERSION = "1.0.0"
-GITHUB_URL = ""        # your GitHub page, e.g. "https://github.com/<name>/vpin-frame-harvester"
+VERSION = "1.0.1"
+GITHUB_URL = "https://github.com/syniztah/VPin-Frame-Harvester/releases"   # About window link
 SPLASH_MS = 1500       # how long the splash screen shows
 
 MODES = [("Game play", "fuzz"), ("Attract mode", "attract"), ("Service menu", "service")]
@@ -262,6 +262,8 @@ class App(tk.Tk):
         self.v_free = tk.BooleanVar(value=False)
         self.v_missing = tk.BooleanVar(value=False)
         self.v_attract_first = tk.BooleanVar(value=False)
+        self.v_findmap = tk.BooleanVar(value=False)
+        self.v_findmap_hint = tk.StringVar(value="for tables without one")
         self.v_show = tk.BooleanVar(value=self.s.get("show_dmd", True))
         self.v_showlog = tk.BooleanVar(value=self.s.get("show_log", True))
         self.v_crom = tk.StringVar(value=self.s.get("crom", ""))
@@ -666,6 +668,10 @@ class App(tk.Tk):
             r.pack(fill="x", padx=12)
             check(r, text, var).pack(side="left")
             label(r, f"– {hint}", fg=SOFT).pack(side="left")
+        r = tk.Frame(c, bg=PANEL)
+        r.pack(fill="x", padx=12)
+        check(r, "Find this table's memory map", self.v_findmap).pack(side="left")
+        label(r, "", fg=SOFT, textvariable=self.v_findmap_hint).pack(side="left")
         tk.Frame(c, bg=PANEL, height=8).pack()
 
         # start / stop (packed from the bottom up: Stop/Open under Start)
@@ -889,6 +895,22 @@ class App(tk.Tk):
             self._in_rom_change = False
         self._refresh_table_card()
 
+    def _update_map_hint(self, rom):
+        from harvester import scriptgen
+        try:
+            mp = scriptgen.nvram_map_for(rom)
+        except Exception:
+            mp = None
+        if not mp:
+            self.v_findmap_hint.set("– none yet for this ROM")
+            self.v_findmap.set(True)
+        elif "/found/" in mp:
+            self.v_findmap_hint.set("– found one; more games improve it")
+            self.v_findmap.set(False)
+        else:
+            self.v_findmap_hint.set("– this table has one")
+            self.v_findmap.set(False)
+
     def _rom_chosen(self):
         rom = self.v_rom.get()
         self.v_out.set(os.path.join("out", rom))
@@ -900,6 +922,7 @@ class App(tk.Tk):
             self.v_game.set("")    # never carry another table's game file over
         self.src_paths = []
         self.done = {"harvest": bool(self._frame_count(self.v_out.get())), "clean": False}
+        self._update_map_hint(rom)
         self.show_tab(getattr(self, "current_tab", "harvest"))
 
     def _make_nvram(self):
@@ -967,7 +990,11 @@ class App(tk.Tk):
                 args.append("--free-play")
             if self.v_missing.get():
                 args.append("--missing-ball")
+            if mode == "fuzz" and self.v_findmap.get():
+                args.append("--find-map")
             jobs.append((args, out))
+        if mode == "fuzz" and self.v_findmap.get():
+            jobs.append((["find-map", out, "--rom", rom], None))   # work it out after the runs
         self.runner.start(jobs)
         self._running(True, "Starting…")
 
