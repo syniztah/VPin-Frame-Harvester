@@ -163,7 +163,8 @@ class PinMame:
         self.lib.PinmameSetConfig(C.byref(self._cfg))   # libpinmame copies the struct
         self.lib.PinmameSetDmdMode(DMD_MODE_RAW)
         self.lib.PinmameSetHandleKeyboard(0)
-        self.lib.PinmameSetHandleMechanics(0xFF)       # let PinMAME simulate built-in mechs
+        if hasattr(self.lib, "PinmameSetHandleMechanics"):
+            self.lib.PinmameSetHandleMechanics(0xFF)   # let PinMAME simulate built-in mechs
 
     def _bind(self):
         L = self.lib
@@ -178,16 +179,32 @@ class PinMame:
         L.PinmameGetSwitch.restype = C.c_int
         L.PinmameSetDmdMode.argtypes = [C.c_int]
         L.PinmameSetHandleKeyboard.argtypes = [C.c_int]
-        L.PinmameSetHandleMechanics.argtypes = [C.c_int]
+        if hasattr(L, "PinmameSetHandleMechanics"):
+            L.PinmameSetHandleMechanics.argtypes = [C.c_int]
         L.PinmameStop.restype = None
-        L.PinmameReadMainCPUMemory.argtypes = [C.c_uint32, C.POINTER(C.c_uint8), C.c_int]
-        L.PinmameReadMainCPUMemory.restype = C.c_int
-        L.PinmameGetRawMemoryRegion.argtypes = [C.c_int]
-        L.PinmameGetRawMemoryRegion.restype = C.c_void_p
-        L.PinmameGetRawMemoryRegionLength.argtypes = [C.c_int]
-        L.PinmameGetRawMemoryRegionLength.restype = C.c_size_t
-        L.PinmameGetSolenoid.argtypes = [C.c_int]
-        L.PinmameGetSolenoid.restype = C.c_int
+        # Newer extras: older libpinmame builds (the official releases lag behind) don't
+        # have them. Without them the harvester still runs, it just can't read the game's
+        # memory (no high-score lowering, no ball/player tracking, no map finder).
+        self.missing: list[str] = []
+        def opt(name, argtypes, restype):
+            f = getattr(L, name, None)
+            if f is None:
+                self.missing.append(name)
+                return None
+            f.argtypes, f.restype = argtypes, restype
+            return f
+        self._read_cpu = opt("PinmameReadMainCPUMemory",
+                             [C.c_uint32, C.POINTER(C.c_uint8), C.c_int], C.c_int)
+        self._region = opt("PinmameGetRawMemoryRegion", [C.c_int], C.c_void_p)
+        self._region_len = opt("PinmameGetRawMemoryRegionLength", [C.c_int], C.c_size_t)
+        self._get_sol = opt("PinmameGetSolenoid", [C.c_int], C.c_int)
+        if self._region is None or self._region_len is None:
+            self._region = self._region_len = None
+        if self.missing:
+            print("Note: this libpinmame is an older build without " + ", ".join(self.missing)
+                  + ". Harvesting still works, but the harvester can't read the game's memory"
+                  " (no high-score lowering, ball/player tracking or map finding). For those,"
+                  " use a newer libpinmame (see the README).", flush=True)
         # Optional extras (present in current builds):
         # PinmameSetRecord/PinmameSetPlayback(const char*) -> record and replay switch input
         # PinmameGetRawMemoryRegion(int) / ...Length(int)  -> read ROM data (useful for Phase 2)
@@ -294,14 +311,20 @@ class PinMame:
         returns nothing. It's only the fallback."""
         if self.lib.PinmameIsRunning() != 1:
             return None
-        REGION_CPU1 = 0x81
-        base = self.lib.PinmameGetRawMemoryRegion(REGION_CPU1)
-        length = self.lib.PinmameGetRawMemoryRegionLength(REGION_CPU1)
+        base, length = self._cpu1()
         if base and address + size <= length:
             return C.string_at(base + address, size)
+        if self._read_cpu is None:
+            return None
         buf = (C.c_uint8 * size)()
-        got = self.lib.PinmameReadMainCPUMemory(address, buf, size)
+        got = self._read_cpu(address, buf, size)
         return bytes(buf[:got]) if got == size else None
+
+    def _cpu1(self) -> tuple[int, int]:
+        """Start address and length of the main CPU's memory region (0, 0 if unavailable)."""
+        if self._region is None:
+            return 0, 0
+        return self._region(0x81) or 0, self._region_len(0x81) or 0
 
     def read_nvram(self) -> bytes | None:
         """The game's battery-backed memory, exactly as PinMAME would save it to the .nv file
@@ -332,8 +355,7 @@ class PinMame:
         Whole region if size is None, but only when it's small (SAM's is 80 MB)."""
         if self.lib.PinmameIsRunning() != 1:
             return None
-        base = self.lib.PinmameGetRawMemoryRegion(0x81)
-        length = self.lib.PinmameGetRawMemoryRegionLength(0x81)
+        base, length = self._cpu1()
         if not base or not length:
             return None
         if size is None:
@@ -349,9 +371,7 @@ class PinMame:
         the high-score table the game actually uses)."""
         if self.lib.PinmameIsRunning() != 1:
             return False
-        REGION_CPU1 = 0x81
-        base = self.lib.PinmameGetRawMemoryRegion(REGION_CPU1)
-        length = self.lib.PinmameGetRawMemoryRegionLength(REGION_CPU1)
+        base, length = self._cpu1()
         if not base or address + len(data) > length:
             return False
         C.memmove(base + address, data, len(data))
@@ -359,7 +379,11 @@ class PinMame:
 
     def solenoid_on(self, number: int) -> bool:
         """Any value above 0 counts as on (modulated outputs report a level)."""
-        return self.lib.PinmameIsRunning() == 1 and self.lib.PinmameGetSolenoid(number) > 0
+        if self.lib.PinmameIsRunning() != 1:
+            return False
+        if self._get_sol is None:                     # older build: last level the callback saw
+            return self._sol_level.get(number, 0) > 0
+        return self._get_sol(number) > 0
 
     def stop(self):
         self.lib.PinmameStop()

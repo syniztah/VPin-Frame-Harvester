@@ -30,6 +30,8 @@ You don't need Python for the release version.
 - **libpinmame** (the PinMAME library). Download the Windows x64 build from the
   [PinMAME releases](https://github.com/vpinball/pinmame/releases)
   (`libpinmame-…-win-x64.zip`) and unzip it, for example to `C:\libpinmame`.
+  Older builds also work, but then the harvester can't read the game's memory
+  (no high-score lowering, ball/player tracking or map finding); the log says so.
 - **Your ROMs.** Put the ROM zips in `C:\libpinmame\roms\`. ROMs are not
   included and never will be.
 - **The table (.vpx)** you want to colour. The harvester reads its script to
