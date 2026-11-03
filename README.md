@@ -19,8 +19,8 @@ awards) you can pick up with a normal manual dump and add to the same project.
 ## Download
 
 1. Go to the **[Releases](../../releases)** page and download
-   `VPinFrameHarvester-windows.zip`.
-2. Unzip it anywhere, for example `C:\VPinFrameHarvester`.
+   `VPinFrameHarvester.zip`.
+2. Unzip it anywhere (right-click → **Extract All…**), for example to `C:\VPinFrameHarvester`.
 3. Double-click **VPinFrameHarvester.exe**.
 
 You don't need Python for the release version.

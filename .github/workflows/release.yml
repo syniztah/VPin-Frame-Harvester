@@ -49,17 +49,18 @@ jobs:
           Copy-Item games $dst/games -Recurse
           Get-ChildItem $dst/games -Filter *.script.vbs | Remove-Item
           Copy-Item README.md, LICENSE $dst/
-          Compress-Archive -Path $dst -DestinationPath VPinFrameHarvester-windows.zip
+          # zip the folder's CONTENTS: unzipping then gives one folder with the app in it
+          Compress-Archive -Path "$dst/*" -DestinationPath VPinFrameHarvester.zip
 
-      - name: Keep the zip on the run page
+      - name: Keep a copy on the run page (for testing before a release)
         uses: actions/upload-artifact@v4
         with:
-          name: VPinFrameHarvester-windows
-          path: VPinFrameHarvester-windows.zip
+          name: VPinFrameHarvester
+          path: dist/VPinFrameHarvester/
 
       - name: Attach the zip to the release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: VPinFrameHarvester-windows.zip
+          files: VPinFrameHarvester.zip
           generate_release_notes: true
