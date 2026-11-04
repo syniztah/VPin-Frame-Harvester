@@ -39,7 +39,11 @@ several worker processes with different random seeds.
 **2. Driver** (`harvester/driver.py`)
 Decides which switches to hit and when. Strategies:
 - `attract`: start nothing; record attract mode, high scores and similar.
-- `service`: explore the service/test menus with the service buttons
+- `service`: explore the service/test menus. With a known machine type (`system` in
+  the game file, or guessed from `service_buttons`) it first tours the menus with that
+  system's buttons (WPC/SAM/Whitestar/Alvin G.: enter, up, down, back; Data East and
+  System 11: advance and direction; GTS3: diagnostic; Capcom: the diagnostic switch),
+  then explores with the service buttons
   (`service_buttons` in the game file), flippers and Start. No game is
   played. The game's NVRAM is backed up first and restored afterwards,
   because menus can change settings.

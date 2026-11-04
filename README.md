@@ -50,6 +50,13 @@ The first time you open the app it asks where `pinmame64.dll` is
    Watch the DMD and the countdown on the right. Each new run only adds frames
    you didn't already have.
 
+**Machine type** (on the table card) is read from the table script, for example
+*Williams/Bally WPC*. It tells the harvester the coin, Start and service buttons.
+Change it if the script names an unusual system. With **No table? Pick a ROM**, set it
+yourself: then **Service menu** works without a table. Service menu runs first take a
+tour of the menus the way a person would (each main-menu item, its pages, some tests),
+then explore at random. Game play still needs the table, for its ball trough.
+
 **Step 2 – Clean & export**
 Removes duplicate score screens (optionally teaching it the score digits) and
 writes one `frames.txt` ready for ColorizingDMD.

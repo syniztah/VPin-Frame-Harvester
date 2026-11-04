@@ -47,8 +47,10 @@ class GameMap:
     nvram_map: str | None = None         # pinball-memory-map, for low-scores (relative to games/)
     tilt: int | None = None              # plumb-bob tilt switch: pulsed now and then for DANGER/TILT
     slam_tilt: int | None = None         # ends a game that runs too long
+    animation_hold_ms: int = 4000        # wait up to this long for a new animation to finish
     max_game_s: int = 600                # longer than this -> slam tilt (game over, attract, initials...)
     service_buttons: list[int] = field(default_factory=list)  # Sega: [0, -1, -2]; WPC: [5, 6, 7, 8]
+    system: str | None = None            # machine type (wpc, de, sega, sam, gts3, capcom, alving ...)
     balls_per_game: int = 3              # only used when PinMAME can't report the coils (timed play)
     game_on_coil: int | None = None      # the "game on" relay: on while a game is being played
     cabinet_pulse_ms: int = 0            # coin/Start press length; 0 = 120/150 ms (some boards scan slowly)
@@ -287,6 +289,8 @@ class FuzzStrategy(Strategy):
         self.game_started_ms = None
         self.players = 1
         self._last_pos, self._pos_since = None, None
+        self._t, self._last_new_ms = 0, -10 ** 9      # when the display last showed a new frame
+        self._hold_from, self._no_hold_until = None, 0
         self.clean = False
         self.eject_full = False
         self.outhole_n = 0                    # balls waiting in the outhole
@@ -453,6 +457,7 @@ class FuzzStrategy(Strategy):
                 self.log.append("will nudge this ball (tilt warning)")
 
     def plan(self, now_ms: int):
+        self._t = now_ms
         if self._blind_q:
             due = [x for x in self._blind_q if x[0] <= now_ms]
             self._blind_q = [x for x in self._blind_q if x[0] > now_ms]
@@ -532,6 +537,7 @@ class FuzzStrategy(Strategy):
                 self.pulse(t2 + i * 3000, g.start, g.cabinet_pulse_ms or 150)
             self.games += 1
             self.game_started_ms = t2
+            self._last_pos, self._pos_since = None, None    # a new game: its ball 1 starts now
             self.serves_in_game = 0
             self.served_since_start = False
             self.events.append((t2 + 500, "started", {"players": players}))   # credits are taken at the first press
@@ -598,6 +604,7 @@ class FuzzStrategy(Strategy):
                 self.pulse(t, g.slam_tilt, 150)
                 self.log.append(f"game ran {limit_s // 60} min - slam tilt to end it")
                 self.game_started_ms = None
+                self._last_pos, self._pos_since = None, None
                 # the machine resets its game; put every ball back in the trough
                 while self.in_trough < self.total_balls - (1 if self.eject_full else 0):
                     self._trough_add(t + 1000)
@@ -659,6 +666,21 @@ class FuzzStrategy(Strategy):
                             self.await_until = t + 40_000        # bonus, match, game over screens
                             self.log.append("timed play: that was the last ball of the game")
                 return
+            # Let new animations play out: while the display keeps showing frames we haven't
+            # captured before, hold off the next hit (up to a few seconds - sparkling score
+            # screens never stop being "new"). A real player doesn't hit a target every half
+            # second, and a hit during a show often cuts it short (Hook, Family Guy).
+            busy = t - self._last_new_ms < 350
+            if busy and t >= self._no_hold_until:
+                if self._hold_from is None:
+                    self._hold_from = t
+                if t - self._hold_from < g.animation_hold_ms:
+                    self.next_action_ms = t + 120
+                    return
+                self._no_hold_until = t + 2500     # held long enough: play on for a bit
+                self._hold_from = None
+            elif not busy:
+                self._hold_from = None
             if g.recipes and self.rng.random() < sum(r.get("chance", 0.03) for r in g.recipes):
                 r = self.rng.choices(g.recipes, weights=[x.get("chance", 0.03) for x in g.recipes])[0]
                 lo, hi = r.get("gap_ms", (700, 1600))
@@ -687,15 +709,15 @@ class FuzzStrategy(Strategy):
                 pf = sorted(set(g.playfield) | set(self.drop_switch))
                 if self.rng.random() < 0.5 or not pf:
                     sw = self._pick()
-                    n = self.rng.randint(3, 10)
-                    gap = self.rng.randint(600, 1500)
+                    n = self.rng.randint(3, 7)
+                    gap = self.rng.randint(1000, 2500)      # room for each hit's animation
                     for i in range(n):
                         self._hit(t + i * gap, sw)
                     self.log.append(f"focus: switch {sw} x{n}")
                 else:
                     start = self.rng.choice(pf)
                     group = [x for x in pf if x // 10 == start // 10]  # same bank of numbers
-                    gap = self.rng.randint(400, 1200)
+                    gap = self.rng.randint(700, 1600)
                     for i, sw in enumerate(group):
                         self._hit(t + i * gap, sw)
                     n = len(group)
@@ -736,6 +758,8 @@ class FuzzStrategy(Strategy):
         return self.rng.choices(sw, weights=[self.weights[s] for s in sw])[0]
 
     def reward(self, new_frames: int):
+        if new_frames:
+            self._last_new_ms = getattr(self, "_t", 0)
         # Decay everything slightly; boost switches hit just before novelty.
         for s in self.weights:
             self.weights[s] = max(0.2, self.weights[s] * 0.995)
@@ -745,11 +769,52 @@ class FuzzStrategy(Strategy):
             self.recent.clear()
 
 
+# How each machine's service buttons work (switch numbers from VPX's system scripts).
+# Menus with four buttons: enter / up / down / back ("start" = the Start button).
+# Data East, System 11: Black advances, Green sets the direction. GTS3: one diagnostic button.
+# Capcom: a diagnostic switch that is turned on and stays on; flippers and Start move around.
+SERVICE_KEYS = {
+    "wpc":    dict(enter=8, up=7, down=6, back=5),
+    "sam":    dict(enter=0, up=-1, down=-2, back=-3),
+    "sega":   dict(enter=0, up=-1, down=-2, back="start"),     # Black / Green / Red
+    "sega2":  dict(enter=0, up=-1, down=-2, back="start"),
+    "alving": dict(enter=-7, back=-6, up=15, down=16),
+    "de":     dict(advance=-7, direction=-6),
+    "de2":    dict(advance=-7, direction=-6),
+    "s11":    dict(advance=-7, direction=-6),
+    "s7":     dict(advance=-7, direction=-6),
+    "gts3":   dict(advance=-8),
+    "capcom": dict(toggle=8),
+}
+
+
+def system_of_game(g: "GameMap") -> str | None:
+    """The machine type: from the game file, or guessed from its service buttons (older files)."""
+    if g.system in SERVICE_KEYS:
+        return g.system
+    sb = list(g.service_buttons)
+    if sb == [5, 6, 7, 8]:
+        return "wpc"
+    if sb == [-3, -2, -1, 0]:
+        return "sam"
+    if sb == [0, -1, -2]:
+        return "sega"
+    if sb == [-7, -6]:
+        return "alving" if g.start == 9 else "de"
+    if sb == [-8]:
+        return "gts3"
+    if sb == [8]:
+        return "capcom"
+    return None
+
+
 class ServiceStrategy(Strategy):
-    """Explore the service/test menus: service buttons, flippers and Start,
-    pressed at random with pauses, favouring buttons that recently led to
-    new screens. No game is played. The run loop backs up the game's NVRAM
-    first and restores it afterwards, because menus can change settings."""
+    """Explore the service/test menus. When the machine type is known it first takes a
+    tour the way a person would (into each main-menu item, through its pages, into some
+    tests and out again); then, and for unknown machines, it presses service buttons,
+    flippers and Start at random, favouring buttons that recently led to new screens.
+    No game is played. The run loop backs up the game's NVRAM first and restores it
+    afterwards, because menus can change settings."""
 
     def __init__(self, game: GameMap, seed: int):
         super().__init__(game, seed)
@@ -760,11 +825,78 @@ class ServiceStrategy(Strategy):
         self.recent: list[int] = []
         self.next_action_ms = (game.boot_s + 10) * 1000
         self.phase = "service"
-        if not game.service_buttons:
+        self.system = system_of_game(game)
+        self.sk = SERVICE_KEYS.get(self.system or "", {})
+        self.tour: list[tuple[str, int]] = self._make_tour() if self.sk else []
+        self.random_until = 0
+        if not game.service_buttons and not self.sk:
             self.log.append("no service_buttons in the game file - nothing to explore")
+        elif self.sk:
+            self.log.append(f"service menu tour for {self.system} ({len(self.tour)} presses), then exploring")
+
+    def _make_tour(self) -> list[tuple[str, int]]:
+        r, sk, steps = self.rng, self.sk, []
+        if "enter" in sk:                                   # WPC, SAM, Whitestar, Alvin G.
+            steps.append(("enter", 3000))                   # into the menu
+            for _ in range(r.randint(6, 9)):                # the main-menu items
+                steps.append(("enter", 3000))               # open one
+                for _ in range(r.randint(5, 14)):           # its pages
+                    steps.append(("up", r.randint(1500, 2600)))
+                    if r.random() < 0.2:                    # look inside (a test, an audit page) and leave;
+                        steps += [("enter", r.randint(3000, 6000)), ("back", 2000)]   # back cancels any edit
+                steps.append(("back", 2500))
+                steps.append(("up", 2000))                  # next main-menu item
+            steps += [("back", 2000)] * 3                   # and out again
+        elif "advance" in sk:                               # Data East, System 11, GTS3
+            steps.append(("advance", 3000))
+            for _ in range(r.randint(40, 80)):
+                x = r.random()
+                if x < 0.08 and self.g.start is not None:
+                    steps.append(("start", r.randint(3000, 6000)))      # run this test
+                elif x < 0.12 and "direction" in sk:
+                    steps.append(("direction", 800))                    # back the other way for a bit
+                else:
+                    steps.append(("advance", r.randint(1500, 3000)))
+        elif "toggle" in sk:                                # Capcom: switch test mode on, look around
+            steps.append(("toggle", 4000))
+            for _ in range(r.randint(30, 60)):
+                k = r.choice(["start"] + ["flip"] * 3)
+                steps.append((k, r.randint(1500, 3000)))
+            steps.append(("toggle", 3000))
+        return steps
+
+    def _press(self, now_ms: int, role: str):
+        sk, g = self.sk, self.g
+        if role in ("direction", "toggle"):                 # switches that stay where they're put
+            sw = sk[role]
+            self.at(now_ms, sw, not self._closed.get(sw, False))
+            return
+        if role == "flip":
+            if g.flippers:
+                self.pulse(now_ms, self.rng.choice(g.flippers), 150)
+            return
+        sw = sk.get(role, role)
+        if sw == "start" or role == "start":
+            sw = g.start
+        if isinstance(sw, int):
+            self.pulse(now_ms, sw, 150)
 
     def plan(self, now_ms: int):
-        if now_ms < self.next_action_ms or not self.g.service_buttons:
+        if now_ms < self.next_action_ms:
+            return
+        if self.tour:
+            role, wait = self.tour.pop(0)
+            self._press(now_ms, role)
+            self.next_action_ms = now_ms + wait
+            if not self.tour:
+                self.log.append("service menu tour done - exploring at random")
+                self.random_until = now_ms + 120_000
+            return
+        if self.sk and self.random_until and now_ms > self.random_until:
+            self.tour = self._make_tour()                    # another tour, different pages
+            self.random_until = 0
+            return
+        if not self.g.service_buttons:
             return
         ks = list(self.weights)
         k = self.rng.choices(ks, weights=[self.weights[x] for x in ks])[0]

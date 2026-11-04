@@ -419,7 +419,14 @@ def cmd_compare(a):
         sig.setdefault((int(proj.mask_id[i]), int(proj.shape[i]), int(proj.hashes[i])), []).append(i)
     sig_seen = sum(1 for v in sig.values() if seen[v].any())
     spct = 100.0 * sig_seen / max(1, len(sig))
-    lines = [f"Project: {proj.name}  ({proj.n} frames)",
+    sizes = sorted({(f.width, f.height) for f in frames})
+    size_note = []
+    if frames and (proj.width, proj.height) not in sizes:
+        size_note = [f"NOTE: the project is {proj.width}x{proj.height} but the captured frames are "
+                     + ", ".join(f"{w}x{h}" for w, h in sizes)
+                     + " - they can't be compared. Check that the runs and the project are for the same ROM."]
+        print(size_note[0])
+    lines = size_note + [f"Project: {proj.name}  ({proj.n} frames)",
              f"Captured frames checked: {len(frames)}",
              f"Project frames reached by the harvester: {int(seen.sum())} of {proj.n} ({pct:.1f}%)",
              f"Distinct screens (as Serum sees them):   {sig_seen} of {len(sig)} ({spct:.1f}%)",
@@ -447,6 +454,7 @@ def cmd_compare(a):
         # For each missed screen, the closest thing the harvester DID capture:
         # a few pixels apart = reached but slightly different; far apart = never reached.
         same = [f for f in frames if (f.width, f.height) == (proj.width, proj.height)]
+    if proj.originals is not None and missed and frames and same:
         cap = np.stack([np.frombuffer(f.pixels, np.uint8).reshape(f.height, f.width) for f in same])
         pick = firsts[:300]
         pm = [proj.masks[proj.mask_id[i]] if proj.mask_id[i] != 255 else None for i in pick]

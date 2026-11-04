@@ -128,13 +128,31 @@ def test_service_strategy():
     from harvester.driver import ServiceStrategy
     g = GameMap("t", start=54, flippers=[82, 84], service_buttons=[0, -1, -2], boot_s=0)
     s = ServiceStrategy(g, seed=2)
-    pressed = set()
-    for now in range(0, 120_000, 20):
+    assert s.system == "sega" and s.tour and s.tour[0][0] == "enter"   # Whitestar: a menu tour first
+    pressed, first = set(), None
+    for now in range(0, 900_000, 20):
         for sw, closed in s.due(now):
             if closed:
                 pressed.add(sw)
+                first = sw if first is None else first
         s.reward(0)
-    assert {0, -1, -2} <= pressed and 54 in pressed, pressed
+    assert first == 0, first                                   # Black button opens the menu
+    assert {0, -1, -2} <= pressed and 54 in pressed, pressed   # Green/Red move, Start backs out
+
+
+def test_rom_only_game_file():
+    from harvester.driver import ServiceStrategy, system_of_game
+    from harvester import scriptgen
+    import json
+    import tempfile
+    g, rep = scriptgen.make_rom_game("xyz_10", "wpc")
+    assert g["system"] == "wpc" and g["service_buttons"] == [5, 6, 7, 8] and g["_rom_only"]
+    p = os.path.join(tempfile.mkdtemp(), "xyz_10.json")
+    json.dump(g, open(p, "w"))
+    gm = GameMap.load(p)
+    assert system_of_game(gm) == "wpc"
+    s = ServiceStrategy(gm, seed=1)
+    assert s.tour[0] == ("enter", 3000)
 
 
 def test_focus_bursts_happen():
@@ -594,6 +612,7 @@ if __name__ == "__main__":
         test_drop_targets_stay_down_until_reset()
         test_ball_count()
         test_service_strategy()
+        test_rom_only_game_file()
         test_focus_bursts_happen()
         test_slam_tilt_ends_long_games()
         test_serve_pulse()

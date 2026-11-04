@@ -166,6 +166,35 @@ def rom_name(script: str) -> str | None:
     return None
 
 
+# machine types offered in the app, in this order (de2/s7 are covered by de/s11)
+CHOICES = ["wpc", "de", "sega", "sega2", "sam", "gts3", "capcom", "alving", "s11", "stern", "bally", "sys80"]
+
+
+def make_rom_game(rom: str, system: str) -> tuple[dict, list[str]]:
+    """A game file for a ROM without a table: the machine type's coin, Start and service
+    buttons, but no playfield (the table script is what tells us those)."""
+    cab = dict(SYSTEMS[system])
+    label = cab.pop("label")
+    g: dict = {"_comment": f"Made for {rom} without a table (machine type chosen in the app). "
+                           "Service menu and attract mode work; games need the table's ball trough, "
+                           "so choose the table's .vpx for those.",
+               "_generated": True, "_rom_only": True,
+               "name": f"{rom} ({label}, no table)", "roms": [rom], "system": system,
+               "trough": [], "playfield": []}
+    for k in ("coin", "start", "tilt", "slam_tilt", "flippers", "service_buttons", "cabinet_pulse_ms",
+              "game_on_coil"):
+        if k in cab:
+            g[k] = cab[k]
+    g["coins_per_credit"] = CPC.get(system, 1)
+    mp = nvram_map_for(rom)
+    if mp:
+        g["nvram_map"] = mp
+    rep = [f"Machine type: {label} - chosen by hand (no table)",
+           "Service menu and attract mode: ready.",
+           "! No table script, so no ball trough or playfield switches - choose the table's .vpx to play games."]
+    return g, rep
+
+
 def system_of(script: str) -> str | None:
     names = [n.lower() for n in re.findall(r'(?i)"(\w+)\.vbs"', script)]
     for n in names:
@@ -174,10 +203,12 @@ def system_of(script: str) -> str | None:
     return None
 
 
-def make_game(script: str, rom: str | None = None, table: str = "") -> tuple[dict, list[str]]:
+def make_game(script: str, rom: str | None = None, table: str = "",
+              system: str | None = None) -> tuple[dict, list[str]]:
+    """system: the machine type chosen by hand, instead of the one the script names."""
     rep: list[str] = []
     rom = rom or rom_name(script)
-    sysname = system_of(script)
+    sysname = system if system in SYSTEMS else system_of(script)
     st_list = list(_statements(script))
     body: dict[str, list[str]] = {}
     for sub, _, st in st_list:
@@ -426,7 +457,9 @@ def make_game(script: str, rom: str | None = None, table: str = "") -> tuple[dic
     if m:
         cab["tilt"] = int(m.group(1))
     if sysname:
-        rep.insert(0, f"Machine type: {cab.pop('label')} ({sysname}.vbs)")
+        g["system"] = sysname
+        rep.insert(0, f"Machine type: {cab.pop('label')} ({sysname}.vbs)"
+                   + (" - chosen by hand" if system in SYSTEMS and system != system_of(script) else ""))
     else:
         cab.pop("label", None)
         rep.insert(0, "! Machine type not recognised - start, coin and flipper switches need filling in.")

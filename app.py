@@ -32,11 +32,12 @@ HARVEST_EXE = os.path.join(HERE, "harvest.exe")    # packaged app: the command-l
 ASSETS = os.path.join(getattr(sys, "_MEIPASS", HERE), "assets")
 ICON_PNG = os.path.join(ASSETS, "icon.png")
 
-VERSION = "1.0.6"
+VERSION = "1.0.7"
 GITHUB_URL = "https://github.com/syniztah/VPin-Frame-Harvester/releases"   # About window link
 SPLASH_MS = 1500       # how long the splash screen shows
 
 MODES = [("Game play", "fuzz"), ("Attract mode", "attract"), ("Service menu", "service")]
+UNKNOWN_SYS = "not known"
 MIX = "Mix (1-4)"
 PLAYERS = ["1", "2", "3", "4", MIX]
 
@@ -253,6 +254,7 @@ class App(tk.Tk):
         self.v_table = tk.StringVar(value="")
         self.v_rom = tk.StringVar(value="")
         self.v_game = tk.StringVar(value="")
+        self.v_system = tk.StringVar(value=UNKNOWN_SYS)     # machine type, shown on the table card
         self.v_out = tk.StringVar(value="")
         self.v_mode = tk.StringVar(value="fuzz")
         self.v_min = tk.IntVar(value=20)
@@ -284,6 +286,7 @@ class App(tk.Tk):
 
         self.v_pm.trace_add("write", self._pm_changed)
         self.v_rom.trace_add("write", self._rom_changed)
+        self.v_system.trace_add("write", self._system_changed)
         self._last_rom = None
         self._pm_changed()
         self._refresh_table_card()
@@ -623,9 +626,16 @@ class App(tk.Tk):
         self.l_game_tag = tk.Label(grid, text="", bg=BLACK, fg=GREEN, font=(UI, 8, "bold"), padx=6)
         self.b_report = tk.Label(grid, text="report", bg=PANEL, fg=OKFG, font=(UI, 9, "underline"), cursor="hand2")
         self.b_report.bind("<Button-1>", lambda e: self._show_report())
+        label(grid, "Machine", fg=SOFT, width=9).grid(row=2, column=0, sticky="w", pady=(3, 0))
+        sys.path.insert(0, HERE)
+        from harvester import scriptgen
+        self.sys_by_label = {scriptgen.SYSTEMS[k]["label"]: k for k in scriptgen.CHOICES}
+        om = self._optionmenu(grid, self.v_system, [UNKNOWN_SYS] + list(self.sys_by_label))
+        om.configure(width=20, font=(UI, 9))
+        om.grid(row=2, column=1, columnspan=3, sticky="w", pady=(3, 0))
         links = tk.Frame(a, bg=PANEL)
         links.pack(fill="x", padx=14)
-        nl = tk.Label(links, text="No table? Pick a ROM to watch its attract mode", bg=PANEL, fg=SOFT,
+        nl = tk.Label(links, text="No table? Pick a ROM (attract mode, service menu)", bg=PANEL, fg=SOFT,
                       font=(UI, 9, "underline"), cursor="hand2")
         nl.pack(side="left")
         nl.bind("<Button-1>", lambda e: self._pick_rom_dialog())
@@ -783,16 +793,81 @@ class App(tk.Tk):
         self.l_game.configure(text=os.path.basename(game) if game else ("none yet" if rom else "—"))
         self.l_game_tag.grid_forget()
         self.b_report.grid_forget()
+        self._show_system(game)
         if game:
             try:
-                gen = json.load(open(os.path.join(HERE, game))).get("_generated")
+                gd = json.load(open(os.path.join(HERE, game)))
             except Exception:
-                gen = False
-            self.l_game_tag.configure(text="made from the script" if gen else "hand-made")
+                gd = {}
+            self.l_game_tag.configure(text="no table" if gd.get("_rom_only") else
+                                      "made from the script" if gd.get("_generated") else "hand-made")
             self.l_game_tag.grid(row=1, column=2, sticky="w", padx=8, pady=(3, 0))
             if self.report:
                 self.b_report.grid(row=1, column=3, sticky="w", pady=(3, 0))
         self.tabs["clean"]["subtext"] = "one tidy dump for ColorizingDMD"
+
+    def _show_system(self, game: str):
+        """Show the game file's machine type in the drop-down (without acting on it)."""
+        name = UNKNOWN_SYS
+        if game and not os.path.basename(game).startswith("_"):
+            try:
+                from harvester.driver import GameMap, system_of_game
+                from harvester import scriptgen
+                k = system_of_game(GameMap.load(os.path.join(HERE, game)))
+                d = json.load(open(os.path.join(HERE, game)))
+                k = d.get("system") or k
+                if k in scriptgen.SYSTEMS:
+                    name = scriptgen.SYSTEMS[k]["label"]
+            except Exception:
+                pass
+        self._sys_quiet = True
+        try:
+            self.v_system.set(name)
+        finally:
+            self._sys_quiet = False
+
+    def _system_changed(self, *_):
+        """Machine type picked by hand: remake the game file for it."""
+        if getattr(self, "_sys_quiet", False):
+            return
+        from harvester import scriptgen
+        rom, game = self.v_rom.get().strip(), self.v_game.get().strip()
+        k = self.sys_by_label.get(self.v_system.get())
+        if not rom or k is None:
+            self._show_system(game)
+            return
+        gpath = os.path.join(HERE, game) if game and not os.path.basename(game).startswith("_") else None
+        d = {}
+        if gpath:
+            try:
+                d = json.load(open(gpath))
+            except Exception:
+                d = {}
+            if not d.get("_generated"):
+                messagebox.showinfo("Machine type", f"{os.path.basename(game)} is a hand-made game file, so "
+                                    "its machine type is set in the file itself.")
+                self._show_system(game)
+                return
+            if d.get("system") == k:
+                return
+        out = gpath or os.path.join(HERE, "games", f"{rom}.json")
+        script_copy = os.path.join(HERE, "games", f"{rom}.script.vbs")
+        if self.v_table.get() and os.path.exists(script_copy):
+            script = open(script_copy, encoding="latin-1").read()
+            name = os.path.splitext(self.v_table.get())[0]
+            g, report = scriptgen.make_game(script, rom, name, system=k)
+            g["_comment"] = g.get("_comment", "") + f" Machine type chosen by hand: {k}."
+        else:
+            g, report = scriptgen.make_rom_game(rom, k)
+            if self.v_mode.get() == "fuzz":
+                self._set_mode("service")              # no table: games can't be played
+        json.dump(g, open(out, "w"), indent=2)
+        self.report = [f"ROM: {rom}", f"Game file: {os.path.relpath(out, HERE)} (remade for the "
+                       f"machine type you picked)", ""] + report
+        self.v_game.set(os.path.relpath(out, HERE))
+        self._refresh_table_card()
+        self._log(self.t_log, "\n" + "\n".join(self.report) + "\n")
+        self.v_status.set(f"{rom}: machine type set to {self.v_system.get()}")
 
     def _show_report(self):
         messagebox.showinfo("What was read from the script", "\n".join(self.report) or "Nothing to show.")
@@ -805,7 +880,9 @@ class App(tk.Tk):
         w = tk.Toplevel(self, bg=PANEL)
         w.title("Pick a ROM")
         w.transient(self)
-        label(w, "Without a table, only Attract mode can be run.", fg=MUTED).pack(anchor="w", padx=14, pady=(12, 6))
+        label(w, "Without a table, Attract mode works straight away. For the Service menu,\n"
+                 "set the Machine type on the table card afterwards.", fg=MUTED, justify="left"
+              ).pack(anchor="w", padx=14, pady=(12, 6))
         lb = tk.Listbox(w, height=16, width=40, bg=FIELD, fg=TEXT, font=F_MONO, relief="flat",
                         highlightthickness=1, highlightbackground=TIPLINE, selectbackground=BLACK,
                         selectforeground=GREEN)
@@ -985,7 +1062,19 @@ class App(tk.Tk):
             else:
                 messagebox.showwarning("No game file",
                                        f"There's no game file for {rom}, so it can't play games or use the "
-                                       "service menu. Choose the table's .vpx to make one, or use Attract mode.")
+                                       "service menu. Choose the table's .vpx to make one, or set the "
+                                       "Machine type on the table card (service menu), or use Attract mode.")
+                return
+        if mode == "fuzz" and game:
+            try:
+                rom_only = json.load(open(os.path.join(HERE, game))).get("_rom_only")
+            except Exception:
+                rom_only = False
+            if rom_only:
+                messagebox.showwarning("Game play needs the table",
+                                       "Without the table, the harvester doesn't know the ball trough or "
+                                       "playfield switches, so it can't play games. Choose the table's .vpx, "
+                                       "or use Attract mode or Service menu.")
                 return
         if not self._check_dll():
             return
